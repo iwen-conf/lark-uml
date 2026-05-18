@@ -21,7 +21,7 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 
 **Execution route:** raw-first, native-only. Read the board as raw, edit native participants, lifelines, activations, and native message connectors in place, then write raw back. Sequence messages are business relationships, so endpoints must bind to participant, lifeline, or activation node ids and remain horizontally aligned. **No PlantUML / Mermaid / SVG anywhere in the loop, not even as a private sketch.**
 
-**Default mode is modify-in-place.** Duplicate and adapt the template's existing participants, lifelines, activations, and message connectors. Only redraw when the user explicitly asks, or the diagram is the wrong type.
+**Default mode is modify-in-place.** Duplicate and adapt the template's existing participants, lifelines, activations, message connectors, and combined fragment frames. Only redraw when the user explicitly asks, or the diagram is the wrong type.
 
 ## Diagram-specific rules
 
@@ -31,11 +31,18 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 - **Self-call.** A participant calling itself draws as a small right-angle loop on the right side of its own lifeline: horizontal out → short drop → horizontal back. Never a long diagonal. Never routed through another lifeline.
 - **Activation bar.** The activation rectangle is a narrow strip **centered on the lifeline**, uniform width. It must not overlap the neighbor lifeline. It does not replace the lifeline.
 - **Crossings.** A message that visually crosses an intermediate lifeline does **not** change its `y` to dodge — it stays a straight horizontal arrow. Routing tools may render a small jump, but the source `y` is identical at both endpoints.
+- **Combined fragments.** Use native rectangular fragment frames when sequence logic needs conditional, optional, looping, or parallel behavior. The operator label sits in the top-left corner, branch guards are written in square brackets, and all messages inside each region still obey the horizontal-message and monotonic-`y` rules. Do not flatten branches into a single sequential list of messages.
+  - `alt` means alternative / conditional branches: exactly one region runs based on its guard, like `if / else if / else`. When the source facts contain mutually exclusive outcomes, the diagram **must** include an `alt` frame covering those branches. Required triggers include success / failure, approved / rejected, authorized / unauthorized, exists / not found, enough quota / insufficient quota, in stock / out of stock, paid / unpaid, valid / invalid, and any user-described "如果...否则..." logic.
+  - `opt` means an optional region: the region runs only when its guard is true, like a single `if` without `else`.
+  - `loop` means repeated execution while the guard or count condition holds, like `for` / `while`.
+  - `par` means parallel regions that may execute concurrently. Keep each region visually separated and do not imply an ordering between parallel branches unless messages make that ordering explicit.
+- **Branch validation.** Before reporting a sequence diagram done, scan the requested flow for mutually exclusive outcomes. If any exist, verify that a visible native `alt` frame is present, has at least two guarded regions, and contains the branch-specific messages in their matching regions.
 - **Forbidden constructions.**
   - Drawing a single diagonal connector between two participant heads with no lifelines.
   - Replacing "lifeline + horizontal message" with one point-to-point polyline.
   - Letting an arrow's `y` shift while it crosses other lifelines in the source.
   - Floating activation bars not aligned to any lifeline.
+  - Showing mutually exclusive branch messages one after another without an enclosing `alt` frame.
 
 ## Forbidden mixings
 
@@ -53,5 +60,6 @@ Build the sequence diagram out of these native whiteboard primitives. Do not exp
 - **Activation bar** — native narrow rectangle centered on the lifeline. It belongs to the lifeline visually but remains a distinct node so that messages can bind to it.
 - **Message connector** — native `type: "connector"` whose `connector.from` and `connector.to` reference participant / lifeline / activation node ids. Both endpoints share the same `y`. Synchronous calls use solid line + filled arrow; returns use dashed line + open arrow. Message text goes in `connector.label`.
 - **Self-call** — native connector from a lifeline back to the same lifeline, rendered as a small right-angle loop on the right side. Endpoints still bind to the same node id at top and bottom of the loop.
+- **Combined fragment frame** — native rectangle or grouped native rectangles spanning the involved lifelines. The frame label is the operator (`alt`, `opt`, `loop`, `par`), and each region has a guard label such as `[报名人数未满]` or `[报名人数已满]`. Region separators are horizontal native lines. Fragment frames are annotations around messages; they do not replace lifelines, activation bars, or bound message connectors.
 
 Every message connector must be a native connector with bound endpoints. Diagonal "point-to-point" lines or freeform polylines are not acceptable substitutes.
