@@ -7,6 +7,8 @@
 
 All `lark-uml:*` skills follow this loop. Diagram-specific quality rules live inside each `SKILL.md`.
 
+This workflow is governed by [`native-agent.md`](./native-agent.md). If there is any ambiguity, behave as a Feishu Whiteboard native operation agent: read raw, modify the existing native template in place, write raw, and verify native connector binding.
+
 ## Pre-flight
 
 1. Load [`lark-shared`](../../lark-shared/SKILL.md) (auth, scopes, `--as` identity).
@@ -52,6 +54,15 @@ lark-cli whiteboard +query <board_token> --output_as raw --as user
 **Modify the template, do not redraw.** Default mode is in-place edit of the existing board: rename, restyle, reconnect, regroup, split, merge, add, or delete individual native nodes and native connectors. Full redraw is allowed only when (a) the user explicitly asks for a clean rebuild, (b) the existing board's diagram type clearly contradicts the requested diagram type, or (c) the existing structure is too corrupted to safely edit in place.
 
 **Element-reuse rule.** When the board needs a new node or new connector, do not invent one from scratch. Find the closest existing element on the same board, duplicate it, and adapt content / position / endpoints. Reuse the template's existing shapes, text styles, colors, sizes, group rhythm, connector line styles, arrow heads, and label placement. If no reusable element exists for what you need, stop and ask the user before introducing a foreign visual vocabulary.
+
+**Template patch protocol.** Treat the raw board as a patch target, not a blank canvas:
+
+1. Classify existing native elements by role, shape, style, text, group, and connector semantics.
+2. Map requested facts onto existing template elements before creating anything new.
+3. Prefer `rename -> move -> reconnect -> clone -> delete` in that order.
+4. Clone only same-kind native nodes / connectors from the current board.
+5. Preserve unrelated template regions and useful ids.
+6. After any delete, repair or remove every connector that referenced the deleted ids.
 
 **No external diagram languages, ever.** Do not draft, sketch, or reason in Mermaid, PlantUML, SVG, Graphviz/DOT, draw.io XML, or any other DSL — not even as a private intermediate step that you discard before writing. The only diagram representation in this workflow is the whiteboard raw JSON. Reason about structure directly in terms of native node ids and native connectors.
 

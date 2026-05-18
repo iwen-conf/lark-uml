@@ -1,6 +1,22 @@
 # lark-uml
 
+Feishu Whiteboard 原生操作 Agent for UML-style diagrams.
+
+This plugin is intentionally strict: it modifies Feishu / Lark whiteboard templates through native `lark-cli whiteboard` raw nodes and native connectors. It must not draw by Mermaid, PlantUML, SVG, Graphviz, draw.io, screenshots, or any converted diagram source. The agent reads the board, edits the existing native template in place, and writes the board back.
+
 Feishu / Lark whiteboard UML skills, packaged as a Claude Code plugin. One specialist skill per diagram type, all of them drive the [`lark-whiteboard`](https://github.com/larksuite) tooling via `lark-cli` so the agent reads native raw, edits native nodes / connectors, and writes raw back itself. The deliverable is an editable whiteboard with structurally bound connectors, not Mermaid / PlantUML / SVG handed back to the user.
+
+## Hard Contract
+
+All skills inherit [`references/native-agent.md`](references/native-agent.md):
+
+- Use `lark-cli whiteboard +query --output_as raw` before editing.
+- Modify the current template in place by renaming, moving, reconnecting, regrouping, splitting, merging, adding, or deleting native elements.
+- Duplicate existing same-kind template nodes / connectors when new elements are needed.
+- Preserve visual vocabulary and useful node ids instead of redrawing the whole board.
+- Write back only through `lark-cli whiteboard +update --input_format raw`.
+- Verify business connectors are native `type: "connector"` nodes with `connector.from` / `connector.to` bound to existing node ids.
+- Treat Mermaid / PlantUML / SVG / DOT / draw.io / screenshot conversion as a failure path, including private sketches.
 
 ## Skills
 
@@ -53,6 +69,7 @@ lark-uml/
 ├── .claude-plugin/plugin.json
 ├── references/                     # shared workflow & language rules
 │   ├── workflow.md
+│   ├── native-agent.md
 │   ├── language.md
 │   ├── boundaries.md
 │   └── connectors.md

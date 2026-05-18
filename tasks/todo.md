@@ -12,4 +12,4 @@
 
 - Added `references/connectors.md` as the shared hard-rule source for native connector binding, coordinate endpoint limits, waypoint limits, pre-write validation, and post-write verification.
 - Updated `references/workflow.md` to require raw query, raw modification, raw update, fact/template inventories, and structural validation.
-- Updated all diagram skills so Mermaid / PlantUML examples are private sketches only, not write paths.
+- Updated all diagram skills so Mermaid / PlantUML / SVG routes are forbidden even as private sketches, not just as write paths.
