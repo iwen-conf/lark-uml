@@ -15,14 +15,9 @@ Specialist skill for **system architecture diagrams** on a Feishu / Lark whitebo
 
 ## Workflow
 
-Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md).
+Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md). Apply the native connector rules in [`../../references/connectors.md`](../../references/connectors.md).
 
-**Preferred source format:** Mermaid `flowchart` with `subgraph` for system / domain boundaries.
-
-```bash
-cat diagram.mmd | lark-cli whiteboard +update <board_token> \
-  --source - --input_format mermaid --overwrite --as user
-```
+**Execution route:** raw-first. Read the board as raw, edit native nodes and native connectors, then write raw back. Architecture call / data-flow relationships are business relationships, so every relationship line must be a native connector whose endpoints bind to service, module, storage, gateway, external-system, or boundary node ids. Mermaid may be used only as a private layout sketch; it is not the whiteboard write format.
 
 ## Diagram-specific rules
 

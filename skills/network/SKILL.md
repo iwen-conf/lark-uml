@@ -15,14 +15,9 @@ Specialist skill for **network topology diagrams** on a Feishu / Lark whiteboard
 
 ## Workflow
 
-Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md).
+Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md). Apply the native connector rules in [`../../references/connectors.md`](../../references/connectors.md).
 
-**Preferred source format:** Mermaid `flowchart` with `subgraph` per zone. For richer device iconography, fall back to PlantUML.
-
-```bash
-cat diagram.mmd | lark-cli whiteboard +update <board_token> \
-  --source - --input_format mermaid --overwrite --as user
-```
+**Execution route:** raw-first. Read the board as raw, edit native zone/device nodes and native connectors, then write raw back. Network links and traffic constraints are business relationships, so endpoints must bind to zone, gateway, firewall, switch, host, service, or peer node ids. Mermaid / PlantUML may be used only as private topology sketches; they are not the whiteboard write format.
 
 ## Diagram-specific rules
 

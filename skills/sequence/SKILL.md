@@ -17,14 +17,9 @@ Sequence diagrams are the most layout-sensitive diagram type in this plugin. The
 
 ## Workflow
 
-Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md).
+Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md). Apply the native connector rules in [`../../references/connectors.md`](../../references/connectors.md).
 
-**Preferred source format:** PlantUML. Mermaid sequence diagrams render with looser layout guarantees; PlantUML keeps lifelines and message endpoints predictable.
-
-```bash
-cat diagram.puml | lark-cli whiteboard +update <board_token> \
-  --source - --input_format plantuml --overwrite --as user
-```
+**Execution route:** raw-first. Read the board as raw, edit native participants, lifelines, activations, and native message connectors, then write raw back. Sequence messages are business relationships, so endpoints must bind to participant, lifeline, or activation node ids and remain horizontally aligned. PlantUML may be used only as a private ordering sketch; it is not the whiteboard write format.
 
 ## Diagram-specific rules
 

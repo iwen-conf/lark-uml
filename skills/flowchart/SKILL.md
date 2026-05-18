@@ -15,14 +15,9 @@ Specialist skill for **flowcharts** on a Feishu / Lark whiteboard. The agent rea
 
 ## Workflow
 
-Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md).
+Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md). Apply the native connector rules in [`../../references/connectors.md`](../../references/connectors.md).
 
-**Preferred source format:** Mermaid `flowchart`.
-
-```bash
-cat diagram.mmd | lark-cli whiteboard +update <board_token> \
-  --source - --input_format mermaid --overwrite --as user
-```
+**Execution route:** raw-first. Read the board as raw, edit native flow nodes and native connectors, then write raw back. Step, decision, branch, rollback, and exception arrows are business relationships, so every arrow must bind to source and target node ids. Mermaid may be used only as a private flow sketch; it is not the whiteboard write format.
 
 ## Diagram-specific rules
 

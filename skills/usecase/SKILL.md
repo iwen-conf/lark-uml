@@ -15,14 +15,9 @@ Specialist skill for **use case diagrams** on a Feishu / Lark whiteboard. The ag
 
 ## Workflow
 
-Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md).
+Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md). Apply the native connector rules in [`../../references/connectors.md`](../../references/connectors.md).
 
-**Preferred source format:** PlantUML. Use case layouts need predictable boundary semantics that Mermaid does not provide cleanly.
-
-```bash
-cat diagram.puml | lark-cli whiteboard +update <board_token> \
-  --source - --input_format plantuml --overwrite --as user
-```
+**Execution route:** raw-first. Read the board as raw, edit native actors, use case ovals, boundaries, and native connectors, then write raw back. Actor associations, include / extend arrows, and generalization relationships are business relationships, so endpoints must bind to actor or use case node ids. PlantUML may be used only as a private relationship sketch; it is not the whiteboard write format.
 
 ## Diagram-specific rules
 

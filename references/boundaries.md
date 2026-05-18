@@ -17,7 +17,8 @@ Every `lark-uml:*` skill inherits these. They are non-negotiable.
 - The deliverable is the **updated whiteboard**, not Mermaid / PlantUML / SVG handed back to the user.
 - Do not paste raw `mermaid` / `plantuml` / `dot` code blocks into the chat as the final result.
 - Do not output "action plan JSON" for someone else to apply.
-- The agent reads, edits, and writes back through `lark-cli whiteboard` (`+query` / `+update`).
+- The agent reads, edits, and writes back through `lark-cli whiteboard` (`+query --output_as raw` / `+update --input_format raw`).
+- For editable diagrams, business relationships must remain native whiteboard connectors with endpoints bound to node ids. Mermaid / PlantUML / SVG / image rendering is not an acceptable substitute for those relationships.
 
 ## 4. Overwrite policy
 
@@ -28,3 +29,9 @@ Every `lark-uml:*` skill inherits these. They are non-negotiable.
 
 - Only touch the requested change. Do not "improve" unrelated regions, restyle nodes the user did not mention, or refactor naming on a whim.
 - A first-time initialization (no prior content) is the only case where the agent designs the whole board from scratch.
+
+## 6. Structural success criteria
+
+- Success means structural binding, correct anchors, and drag-follow semantics.
+- "Looks connected", "visually aligned", or "touches the edge" is not sufficient.
+- If a business connector would not remain attached when either endpoint node moves, the edit is incomplete.

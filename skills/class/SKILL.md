@@ -18,14 +18,9 @@ This skill is **not** a data-model diagram. For database tables / fields / forei
 
 ## Workflow
 
-Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md).
+Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md). Apply the native connector rules in [`../../references/connectors.md`](../../references/connectors.md).
 
-**Preferred source format:** PlantUML.
-
-```bash
-cat diagram.puml | lark-cli whiteboard +update <board_token> \
-  --source - --input_format plantuml --overwrite --as user
-```
+**Execution route:** raw-first. Read the board as raw, edit native class boxes and native connectors, then write raw back. Inheritance, realization, association, aggregation, composition, and dependency relationships are business relationships, so their endpoints must bind to class / interface node ids. PlantUML may be used only as a private design sketch; it is not the whiteboard write format.
 
 ## Diagram-specific rules
 

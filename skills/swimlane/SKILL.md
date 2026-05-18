@@ -15,14 +15,9 @@ Specialist skill for **swimlane diagrams** on a Feishu / Lark whiteboard. The ag
 
 ## Workflow
 
-Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md).
+Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md). Apply the native connector rules in [`../../references/connectors.md`](../../references/connectors.md).
 
-**Preferred source format:** Mermaid `flowchart` with one `subgraph` per lane.
-
-```bash
-cat diagram.mmd | lark-cli whiteboard +update <board_token> \
-  --source - --input_format mermaid --overwrite --as user
-```
+**Execution route:** raw-first. Read the board as raw, edit native lane groups, action nodes, decision nodes, and native connectors, then write raw back. Cross-lane handoffs, branch arrows, and re-entry paths are business relationships, so every endpoint must bind to node ids. Mermaid may be used only as a private swimlane sketch; it is not the whiteboard write format.
 
 ## Diagram-specific rules
 

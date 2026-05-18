@@ -17,14 +17,9 @@ This skill is **not** a software-design class diagram. For business objects with
 
 ## Workflow
 
-Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md).
+Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md). Apply the native connector rules in [`../../references/connectors.md`](../../references/connectors.md).
 
-**Preferred source format:** PlantUML in entity mode.
-
-```bash
-cat diagram.puml | lark-cli whiteboard +update <board_token> \
-  --source - --input_format plantuml --overwrite --as user
-```
+**Execution route:** raw-first. Read the board as raw, edit native entity/table shapes and native connectors, then write raw back. Foreign-key, cardinality, and table/field relationships are business relationships, so endpoints must bind to the relevant entity or row node ids. PlantUML may be used only as a private schema sketch; it is not the whiteboard write format.
 
 ## Diagram-specific rules
 
