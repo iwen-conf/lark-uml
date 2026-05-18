@@ -31,7 +31,7 @@ lark-cli whiteboard +query <board_token> --output_as raw --as user
 - Read raw before modifying an existing board, including rearrange, add-node, add-connector, fix-line, or partial-update tasks.
 - For a first-time initialization, still use raw when the board already contains a visual template that should be reused.
 - Query a preview image only as a visual aid; it is not the source of truth.
-- Do not route existing complex boards through Mermaid / PlantUML / SVG / DSL reconstruction when the task requires continued editing, anchored connectors, or drag-follow behavior.
+- Do not route existing boards through Mermaid / PlantUML / SVG / draw.io / DSL of any kind, not even as a private draft. There is no "sketch first, convert later" path. The only intermediate representation is the whiteboard raw JSON itself.
 
 ## Step 3 — Build the fact and template inventories
 
@@ -49,11 +49,16 @@ lark-cli whiteboard +query <board_token> --output_as raw --as user
 
 ## Step 4 — Modify native raw
 
+**Modify the template, do not redraw.** Default mode is in-place edit of the existing board: rename, restyle, reconnect, regroup, split, merge, add, or delete individual native nodes and native connectors. Full redraw is allowed only when (a) the user explicitly asks for a clean rebuild, (b) the existing board's diagram type clearly contradicts the requested diagram type, or (c) the existing structure is too corrupted to safely edit in place.
+
+**Element-reuse rule.** When the board needs a new node or new connector, do not invent one from scratch. Find the closest existing element on the same board, duplicate it, and adapt content / position / endpoints. Reuse the template's existing shapes, text styles, colors, sizes, group rhythm, connector line styles, arrow heads, and label placement. If no reusable element exists for what you need, stop and ask the user before introducing a foreign visual vocabulary.
+
+**No external diagram languages, ever.** Do not draft, sketch, or reason in Mermaid, PlantUML, SVG, Graphviz/DOT, draw.io XML, or any other DSL — not even as a private intermediate step that you discard before writing. The only diagram representation in this workflow is the whiteboard raw JSON. Reason about structure directly in terms of native node ids and native connectors.
+
 - Edit the native `WBDocument` / raw structure directly.
 - Preserve useful existing node ids and styles. Avoid unnecessary id churn.
-- When adding elements, copy the closest existing whiteboard shape / text / connector style from the template and then adjust content, position, and binding.
 - When adding or repairing business relationships, create or modify native `connector` nodes whose endpoints bind to node ids.
-- Use external diagram languages only as private reasoning drafts if helpful. Do not write them to the board for tasks that require editable, node-bound connectors.
+- When deleting a node, scan every connector and remove or re-bind any endpoint that referenced it. Never leave a connector pointing at a deleted id.
 
 Allowed write surface:
 

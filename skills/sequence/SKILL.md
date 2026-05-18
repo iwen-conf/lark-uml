@@ -19,7 +19,9 @@ Sequence diagrams are the most layout-sensitive diagram type in this plugin. The
 
 Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md). Apply the native connector rules in [`../../references/connectors.md`](../../references/connectors.md).
 
-**Execution route:** raw-first. Read the board as raw, edit native participants, lifelines, activations, and native message connectors, then write raw back. Sequence messages are business relationships, so endpoints must bind to participant, lifeline, or activation node ids and remain horizontally aligned. PlantUML may be used only as a private ordering sketch; it is not the whiteboard write format.
+**Execution route:** raw-first, native-only. Read the board as raw, edit native participants, lifelines, activations, and native message connectors in place, then write raw back. Sequence messages are business relationships, so endpoints must bind to participant, lifeline, or activation node ids and remain horizontally aligned. **No PlantUML / Mermaid / SVG anywhere in the loop, not even as a private sketch.**
+
+**Default mode is modify-in-place.** Duplicate and adapt the template's existing participants, lifelines, activations, and message connectors. Only redraw when the user explicitly asks, or the diagram is the wrong type.
 
 ## Diagram-specific rules
 
@@ -42,29 +44,14 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 - Deployment layering — that belongs in `lark-uml:architecture`.
 - Network link topology — that belongs in `lark-uml:network`.
 
-## Minimal template
+## Native node composition
 
-```plantuml
-@startuml
-autonumber
-actor 学员 as User
-participant "前端" as FE
-participant "订单服务" as Order
-participant "支付服务" as Pay
-database "DB" as DB
+Build the sequence diagram out of these native whiteboard primitives. Do not express any part of the diagram as PlantUML, Mermaid, or SVG.
 
-User -> FE : 点击"立即支付"
-FE -> Order : createOrder(courseId)
-activate Order
-Order -> DB : INSERT order
-DB --> Order : ok
-Order --> FE : orderId
-deactivate Order
+- **Participant header** — native rectangle (or actor stick-figure for human actors), one per role. All headers share the same top `y` and uniform spacing. Headers are produced by cloning an existing header.
+- **Lifeline** — native vertical line / dashed line directly below its participant header. Lifelines are strictly vertical, identical length, bottom-`y` aligned, with `x` equal to the center `x` of the header.
+- **Activation bar** — native narrow rectangle centered on the lifeline. It belongs to the lifeline visually but remains a distinct node so that messages can bind to it.
+- **Message connector** — native `type: "connector"` whose `connector.from` and `connector.to` reference participant / lifeline / activation node ids. Both endpoints share the same `y`. Synchronous calls use solid line + filled arrow; returns use dashed line + open arrow. Message text goes in `connector.label`.
+- **Self-call** — native connector from a lifeline back to the same lifeline, rendered as a small right-angle loop on the right side. Endpoints still bind to the same node id at top and bottom of the loop.
 
-FE -> Pay : pay(orderId)
-activate Pay
-Pay -> Pay : 校验金额
-Pay --> FE : 支付链接
-deactivate Pay
-@enduml
-```
+Every message connector must be a native connector with bound endpoints. Diagonal "point-to-point" lines or freeform polylines are not acceptable substitutes.

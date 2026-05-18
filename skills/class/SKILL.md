@@ -20,7 +20,9 @@ This skill is **not** a data-model diagram. For database tables / fields / forei
 
 Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md). Apply the native connector rules in [`../../references/connectors.md`](../../references/connectors.md).
 
-**Execution route:** raw-first. Read the board as raw, edit native class boxes and native connectors, then write raw back. Inheritance, realization, association, aggregation, composition, and dependency relationships are business relationships, so their endpoints must bind to class / interface node ids. PlantUML may be used only as a private design sketch; it is not the whiteboard write format.
+**Execution route:** raw-first, native-only. Read the board as raw, edit native class boxes and native connectors in place, then write raw back. Inheritance, realization, association, aggregation, composition, and dependency relationships are business relationships, so their endpoints must bind to class / interface node ids. **No PlantUML / Mermaid / SVG anywhere in the loop, not even as a private sketch.**
+
+**Default mode is modify-in-place.** Duplicate and adapt the template's existing class boxes and relationship connectors. Only redraw when the user explicitly asks, or the existing diagram is the wrong type entirely.
 
 ## Diagram-specific rules
 
@@ -48,36 +50,18 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 - Deployment topology — that belongs in `lark-uml:architecture`.
 - Database table layout — that belongs in `lark-uml:er`.
 
-## Minimal template
+## Native node composition
 
-```plantuml
-@startuml
-interface UserService {
-  +register(input: RegisterDTO): User
-  +login(email: String, pwd: String): Token
-}
+Build the class diagram out of these native whiteboard primitives. Do not express any part of the diagram as PlantUML, Mermaid, or SVG.
 
-class UserServiceImpl implements UserService {
-  -userRepo: UserRepository
-  +register(input: RegisterDTO): User
-  +login(email: String, pwd: String): Token
-}
+- **Class box** — native rectangle, divided into three stacked regions (class name on top, attributes in the middle, methods at the bottom). The board's existing class boxes already use a specific structure; clone one and overwrite its text rather than building a new shape.
+- **Interface box** — same native rectangle layout as the class box, with a `«interface»` stereotype on the name row (or whatever marker the template already uses).
+- **Visibility markers** — keep `+` / `-` / `#` / `~` in front of each member.
+- **Inheritance connector** — native `type: "connector"`, hollow-triangle arrow head, solid line, from child class id to parent class id.
+- **Realization connector** — native connector, hollow-triangle arrow head, dashed line, from implementer id to interface id.
+- **Association connector** — native connector, solid line, optional role / multiplicity labels.
+- **Aggregation connector** — native connector, solid line, hollow diamond on the whole-class side.
+- **Composition connector** — native connector, solid line, filled diamond on the whole-class side.
+- **Dependency connector** — native connector, dashed line, open arrow head.
 
-class UserController {
-  -userService: UserService
-  +postRegister(req: HttpRequest): HttpResponse
-  +postLogin(req: HttpRequest): HttpResponse
-}
-
-class User {
-  -id: Long
-  -email: String
-  -nickname: String
-  +rename(newName: String): void
-}
-
-UserController --> UserService : depends on
-UserServiceImpl --> User : returns
-UserServiceImpl o-- UserRepository : holds
-@enduml
-```
+For every relationship connector, `connector.from` and `connector.to` must be ids of real class / interface boxes that survive the edit. Clone the closest existing connector with the right arrow style before adjusting endpoints.

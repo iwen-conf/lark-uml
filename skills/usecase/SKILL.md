@@ -17,7 +17,9 @@ Specialist skill for **use case diagrams** on a Feishu / Lark whiteboard. The ag
 
 Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md). Apply the native connector rules in [`../../references/connectors.md`](../../references/connectors.md).
 
-**Execution route:** raw-first. Read the board as raw, edit native actors, use case ovals, boundaries, and native connectors, then write raw back. Actor associations, include / extend arrows, and generalization relationships are business relationships, so endpoints must bind to actor or use case node ids. PlantUML may be used only as a private relationship sketch; it is not the whiteboard write format.
+**Execution route:** raw-first, native-only. Read the board as raw, edit native actors, use case ovals, boundaries, and native connectors in place, then write raw back. Actor associations, include / extend arrows, and generalization relationships are business relationships, so endpoints must bind to actor or use case node ids. **No PlantUML / Mermaid / SVG anywhere in the loop, not even as a private sketch.**
+
+**Default mode is modify-in-place.** Duplicate and adapt the template's existing actors, ovals, system boundary, and relationship connectors. Only redraw when the user explicitly asks, or the diagram is fundamentally the wrong type.
 
 ## Diagram-specific rules
 
@@ -38,27 +40,15 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 - Network link topology — that belongs in `lark-uml:network`.
 - Sequence messages or lifelines — those belong in `lark-uml:sequence`.
 
-## Minimal template
+## Native node composition
 
-```plantuml
-@startuml
-left to right direction
-actor "学员" as Student
-actor "讲师" as Teacher
+Build the use case diagram out of these native whiteboard primitives. Do not express any part of the diagram as PlantUML, Mermaid, or SVG.
 
-rectangle "在线课程系统" {
-  usecase "浏览课程" as UC1
-  usecase "报名课程" as UC2
-  usecase "支付订单" as UC3
-  usecase "发布课程" as UC4
-  usecase "查看学员评价" as UC5
-}
+- **System boundary** — native rectangle with the system name in the header. All use case ovals sit inside it.
+- **Actor** — native stick-figure (or rectangle labeled with the actor name if the template uses that style). All actors sit outside the boundary, lined up on the left and / or right side.
+- **Use case** — native oval / ellipse inside the boundary, labeled with a verb-phrase use case name in business Chinese.
+- **Association connector** — native `type: "connector"`, straight line, no arrowhead or open arrowhead, from actor id to use case id. Uniform style across all actor → use case lines.
+- **Include / extend connector** — native connector, dashed line with open arrow, `connector.label` of `«include»` / `«extend»` (or whichever marker the template already uses).
+- **Generalization connector** — native connector, solid line, hollow triangle arrowhead, from specific to general actor / use case.
 
-Student --> UC1
-Student --> UC2
-Student --> UC3
-Teacher --> UC4
-Teacher --> UC5
-UC2 ..> UC3 : <<include>>
-@enduml
-```
+When adding actors or use cases, clone the closest existing one and adjust label, position, and connector bindings. Multiple lines from a single actor should fan out from one side, not surround the actor on four sides.

@@ -17,7 +17,9 @@ Specialist skill for **swimlane diagrams** on a Feishu / Lark whiteboard. The ag
 
 Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md). Apply the native connector rules in [`../../references/connectors.md`](../../references/connectors.md).
 
-**Execution route:** raw-first. Read the board as raw, edit native lane groups, action nodes, decision nodes, and native connectors, then write raw back. Cross-lane handoffs, branch arrows, and re-entry paths are business relationships, so every endpoint must bind to node ids. Mermaid may be used only as a private swimlane sketch; it is not the whiteboard write format.
+**Execution route:** raw-first, native-only. Read the board as raw, edit native lane groups, action nodes, decision nodes, and native connectors in place, then write raw back. Cross-lane handoffs, branch arrows, and re-entry paths are business relationships, so every endpoint must bind to node ids. **No Mermaid / PlantUML / SVG anywhere in the loop, not even as a private sketch.**
+
+**Default mode is modify-in-place.** Duplicate and adapt existing lane groups and existing node / connector elements rather than redrawing. Only redraw when the user explicitly asks, or the template is fundamentally wrong.
 
 ## Diagram-specific rules
 
@@ -35,22 +37,15 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 - Pure deployment layering (web tier / app tier / db tier) — that belongs in `lark-uml:architecture`.
 - Class attributes / methods — those belong in `lark-uml:class`.
 
-## Minimal template
+## Native node composition
 
-```mermaid
-flowchart TB
-  subgraph 用户["用户"]
-    A1([开始]) --> A2[提交申请]
-  end
-  subgraph 审批["审批人"]
-    B1{是否通过?}
-    B2[驳回并回流]
-  end
-  subgraph 系统["系统"]
-    C1[归档]
-    C2([结束])
-  end
-  A2 --> B1
-  B1 -- 通过 --> C1 --> C2
-  B1 -- 不通过 --> B2 --> A2
-```
+Build the swimlane out of these native whiteboard primitives. Do not express any part of the diagram as Mermaid, PlantUML, or SVG.
+
+- **Lane** — native group / container shape (one per role, team, system, or stage). Lane header text uses the role name in business language. New lanes are created by duplicating an existing lane and editing its header.
+- **Action** — native rectangle, placed entirely inside one lane. Every action belongs to exactly one lane; never straddle a boundary.
+- **Decision** — native diamond inside the lane that owns the decision. One incoming connector, two or more outgoing connectors, each labeled in business Chinese.
+- **Start / End** — native stadium / circle shape inside the lane where the flow begins or terminates.
+- **Cross-lane connector** — native `type: "connector"` with `connector.from` / `connector.to` bound to node ids in different lanes. Anchors must reflect lane geometry (e.g., right anchor of source lane → left anchor of target lane). Label the connector with the trigger when the handoff is not obvious.
+- **Failure / re-entry connector** — same native connector primitive, with a Chinese label like `失败回流` / `驳回返工`. Endpoints must still bind to real node ids; never leave a dangling tail.
+
+New lanes, nodes, and connectors are produced by duplicating the closest existing same-kind element and adapting it.

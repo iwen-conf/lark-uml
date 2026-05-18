@@ -19,7 +19,9 @@ This skill is **not** a software-design class diagram. For business objects with
 
 Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md). Apply the native connector rules in [`../../references/connectors.md`](../../references/connectors.md).
 
-**Execution route:** raw-first. Read the board as raw, edit native entity/table shapes and native connectors, then write raw back. Foreign-key, cardinality, and table/field relationships are business relationships, so endpoints must bind to the relevant entity or row node ids. PlantUML may be used only as a private schema sketch; it is not the whiteboard write format.
+**Execution route:** raw-first, native-only. Read the board as raw, edit native entity / table shapes and native connectors in place, then write raw back. Foreign-key, cardinality, and table / field relationships are business relationships, so endpoints must bind to the relevant entity or row node ids. **No PlantUML / Mermaid / SVG anywhere in the loop, not even as a private sketch.**
+
+**Default mode is modify-in-place.** Duplicate and adapt the template's existing entity tables, field rows, and relationship connectors. Only redraw when the user explicitly asks, or the diagram is the wrong type entirely.
 
 ## Diagram-specific rules
 
@@ -39,37 +41,14 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 - Network devices — those belong in `lark-uml:network`.
 - Deployment layering — that belongs in `lark-uml:architecture`.
 
-## Minimal template
+## Native node composition
 
-```plantuml
-@startuml
-hide circle
-skinparam linetype ortho
+Build the ER diagram out of these native whiteboard primitives. Do not express any part of the diagram as PlantUML, Mermaid, or SVG.
 
-entity "用户 (user)" as user {
-  + id : BIGINT <<PK>>
-  --
-  email : VARCHAR(128) <<UQ, NN>>
-  nickname : VARCHAR(64) <<NN>>
-  created_at : DATETIME <<NN>>
-}
+- **Entity** — native rectangle with a header row (table name + optional Chinese display name) and one stacked row per field. New entities are produced by duplicating an existing entity and editing the header and rows.
+- **Field row** — native sub-rectangle / table-row element inside the entity, with columns `字段名 | 类型 | 约束`. Constraint markers come from the fixed set `PK`, `FK`, `NN`, `UQ`, `IDX`.
+- **PK / FK rows** — same field-row primitive, marked with `PK` or `FK`. Foreign-key rows are the actual endpoints relationship lines bind to (not just the entity header).
+- **Relationship connector** — native `type: "connector"`, with `connector.from` bound to the FK row id on the child side and `connector.to` bound to the PK row id on the parent side. Cardinality is shown via the connector's end style (crow-foot or `1..1` / `1..*` / `0..*` / `0..1` labels) — keep one notation per board.
+- **Junction entity** — for many-to-many, materialize a native entity in its own right with two FK rows; never substitute a single `*..*` line.
 
-entity "课程 (course)" as course {
-  + id : BIGINT <<PK>>
-  --
-  title : VARCHAR(128) <<NN>>
-  teacher_id : BIGINT <<FK, NN>>
-}
-
-entity "报名 (enrollment)" as enrollment {
-  + id : BIGINT <<PK>>
-  --
-  user_id : BIGINT <<FK, NN>>
-  course_id : BIGINT <<FK, NN>>
-  enrolled_at : DATETIME <<NN>>
-}
-
-user ||--o{ enrollment
-course ||--o{ enrollment
-@enduml
-```
+When you add a field, clone an existing field row from the same or an adjacent entity to preserve column widths and text style.

@@ -17,7 +17,9 @@ Specialist skill for **system architecture diagrams** on a Feishu / Lark whitebo
 
 Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md). Apply the native connector rules in [`../../references/connectors.md`](../../references/connectors.md).
 
-**Execution route:** raw-first. Read the board as raw, edit native nodes and native connectors, then write raw back. Architecture call / data-flow relationships are business relationships, so every relationship line must be a native connector whose endpoints bind to service, module, storage, gateway, external-system, or boundary node ids. Mermaid may be used only as a private layout sketch; it is not the whiteboard write format.
+**Execution route:** raw-first, native-only. Read the board as raw, edit native nodes and native connectors in place, then write raw back. Architecture call / data-flow relationships are business relationships, so every relationship line must be a native connector whose endpoints bind to service, module, storage, gateway, external-system, or boundary node ids. **No Mermaid / PlantUML / SVG anywhere in the loop, not even as a private sketch.**
+
+**Default mode is modify-in-place.** Duplicate and adapt the template's existing boundaries, shapes, and connector styles rather than redrawing. Only redraw when the user explicitly asks, or the template is fundamentally wrong for the system.
 
 ## Diagram-specific rules
 
@@ -39,38 +41,15 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 - Network connectivity (subnets, VLANs, firewall rules) — that belongs in `lark-uml:network`.
 - Class members or methods — those belong in `lark-uml:class`.
 
-## Minimal template
+## Native node composition
 
-```mermaid
-flowchart LR
-  subgraph Client["客户端"]
-    Web[Web 端]
-    App[移动端]
-  end
+Build the architecture diagram out of these native whiteboard primitives. Do not express any part of the diagram as Mermaid, PlantUML, or SVG.
 
-  subgraph Edge["边缘层"]
-    GW[API 网关]
-  end
+- **Boundary** — native group / container, one per system, tenant, domain, deployment zone, or third-party perimeter. Nest at most two levels.
+- **Service / module** — native rectangle inside its owning boundary. Same fill / border across same-tier services.
+- **External system** — native rectangle with a visually distinct outline (e.g., dashed border) supplied by the template.
+- **Storage** — native cylinder, or a rectangle whose label clearly says `DB` / `Cache` / `Queue` / `Object Store`, matching whichever style the template already uses.
+- **Edge / gateway** — native trapezoid, or rectangle labeled `网关` / `Gateway`, matching the template.
+- **Connector** — native `type: "connector"` whose `connector.from` / `connector.to` reference real node ids. Label the connector with the protocol or data direction (`HTTP`, `gRPC`, `Kafka`, `读` / `写`, `事件`). Sync / async distinction may use line style (solid / dashed) but must stay consistent.
 
-  subgraph Core["核心服务"]
-    UserSvc[用户服务]
-    OrderSvc[订单服务]
-    PaySvc[支付服务]
-  end
-
-  subgraph Data["存储"]
-    DB[(MySQL)]
-    Cache[(Redis)]
-    MQ[[Kafka]]
-  end
-
-  Web --> GW
-  App --> GW
-  GW -- HTTP --> UserSvc
-  GW -- HTTP --> OrderSvc
-  OrderSvc -- HTTP --> PaySvc
-  UserSvc --> DB
-  OrderSvc --> DB
-  OrderSvc --> Cache
-  PaySvc -- 事件 --> MQ
-```
+When the template is missing a kind of element, duplicate the closest existing element and adapt it. Do not introduce a foreign visual vocabulary.

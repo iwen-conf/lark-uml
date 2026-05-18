@@ -17,7 +17,9 @@ Specialist skill for **network topology diagrams** on a Feishu / Lark whiteboard
 
 Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md). Apply the native connector rules in [`../../references/connectors.md`](../../references/connectors.md).
 
-**Execution route:** raw-first. Read the board as raw, edit native zone/device nodes and native connectors, then write raw back. Network links and traffic constraints are business relationships, so endpoints must bind to zone, gateway, firewall, switch, host, service, or peer node ids. Mermaid / PlantUML may be used only as private topology sketches; they are not the whiteboard write format.
+**Execution route:** raw-first, native-only. Read the board as raw, edit native zone / device nodes and native connectors in place, then write raw back. Network links and traffic constraints are business relationships, so endpoints must bind to zone, gateway, firewall, switch, host, service, or peer node ids. **No Mermaid / PlantUML / SVG anywhere in the loop, not even as a private sketch.**
+
+**Default mode is modify-in-place.** Duplicate and adapt the template's existing zones, device shapes, and link styles. Only redraw when the user explicitly asks, or the template does not match the actual topology at all.
 
 ## Diagram-specific rules
 
@@ -40,32 +42,17 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 - Application-layer call graphs — those belong in `lark-uml:architecture`.
 - Database tables — those belong in `lark-uml:er`.
 
-## Minimal template
+## Native node composition
 
-```mermaid
-flowchart TB
-  Internet((Internet))
+Build the network topology out of these native whiteboard primitives. Do not express any part of the diagram as Mermaid, PlantUML, or SVG.
 
-  subgraph DMZ["DMZ 10.0.1.0/24"]
-    FW[防火墙 FW]
-    LB[负载均衡 LB]
-  end
+- **Zone** — native group / container, one per Internet boundary, DMZ, public subnet, private subnet, VPC, on-prem segment, or partner network. Header carries zone name and CIDR if provided.
+- **Internet / external cloud** — native circle or cloud-shape supplied by the template; placed at the top of the canvas.
+- **Router / gateway** — native rectangle with `Router` / `GW` label.
+- **Firewall** — native rectangle with `FW` label (or the dashed / accent style the template already uses).
+- **Switch / load balancer** — native rectangle with `SW` / `LB` label.
+- **Host / VM / container** — native rectangle with `Host` / `VM` / `Pod` label.
+- **Service endpoint** — native rectangle named after the service.
+- **Link connector** — native `type: "connector"` whose `connector.from` / `connector.to` bind to two device node ids. Undirected for symmetric connectivity; arrowhead only when the constraint is asymmetric (NAT, allowed direction). Label only with network-layer facts (`TCP/443`, `VLAN 10`, peering name) — never with business-layer call descriptions.
 
-  subgraph App["应用子网 10.0.10.0/24"]
-    App1[应用主机 1]
-    App2[应用主机 2]
-  end
-
-  subgraph DB["数据子网 10.0.20.0/24"]
-    DB1[(MySQL 主)]
-    DB2[(MySQL 从)]
-  end
-
-  Internet --- FW
-  FW --- LB
-  LB --- App1
-  LB --- App2
-  App1 --- DB1
-  App2 --- DB1
-  DB1 --- DB2
-```
+When extending, duplicate the closest existing zone, device, or link and adapt it.
