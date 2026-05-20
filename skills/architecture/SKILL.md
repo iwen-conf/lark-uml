@@ -43,6 +43,8 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 
 ## Native node composition
 
+Pick every native `type` from the matrix in [`../../references/native-types.md`](../../references/native-types.md) (see the architecture row). Architecture must use `composite_shape` for services / modules / gateways / external systems, `cylinder` for storage, `section` for boundaries, and `connector` for calls — never a generic rectangle labeled `DB`, never more than two nested `section` levels.
+
 Build the architecture diagram out of these native whiteboard primitives. Do not express any part of the diagram as Mermaid, PlantUML, or SVG.
 
 - **Boundary** — native group / container, one per system, tenant, domain, deployment zone, or third-party perimeter. Nest at most two levels.

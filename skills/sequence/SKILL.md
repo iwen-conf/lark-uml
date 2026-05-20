@@ -65,28 +65,14 @@ Build the sequence diagram out of these native whiteboard primitives. Do not exp
 
 Every message connector must be a native connector with bound endpoints. Diagonal "point-to-point" lines or freeform polylines are not acceptable substitutes.
 
-## Native type cheat-sheet (pick by intent, not by appearance)
+## Native type cheat-sheet
 
-When in doubt about which native `type` to emit, match the **intent** in the left column to the **single correct** `type` in the right column. Never reach for a generic shape when a dedicated sequence shape exists — the dedicated shape carries the semantics (operator pentagon, lifeline tail, actor stick figure) that plain rectangles cannot fake.
+Pick the native `type` by intent before you emit any node. The full matrix lives in [`../../references/native-types.md`](../../references/native-types.md); the sequence row spells out exactly which types are allowed and which substitutes will silently break the diagram. **Sequence-specific reminders that override generic instincts:**
 
-| Intent (what the user wants to draw) | Native `type` | Key fields | Forbidden substitutes |
-|---|---|---|---|
-| Object / system participant header (rectangle) | `composite_shape` with `composite_shape.type: "round_rect"` | `text.text`, `x/y/width/height` | `round_rect` alone, plain `text_shape` |
-| Human actor header (stick figure) | `composite_shape` with `composite_shape.type: "actor"` (or the template's existing actor head) | `text.text` = role name | Drawing a stick figure with multiple connectors / SVG paths |
-| Lifeline tail under a participant header | `life_line` | `lifeline.size` = total vertical length, `lifeline.type` = `"round_rect"` (object) or `"actor_lifeline"` (actor); `x` = center `x` of the header | Plain vertical `connector`, dashed `text_shape`, freeform line |
-| Activation bar on a lifeline | `life_line` with a narrow `width` and short `lifeline.size`, centered on the parent lifeline's `x` | Same as lifeline, but short | Plain `round_rect` floated next to the lifeline |
-| Message call / return between lifelines | `connector` with `connector.start.attached_object.id` and `connector.end.attached_object.id` bound to lifeline / activation / header node ids | `connector.shape: "straight"`, `end.arrow_style: "triangle_arrow"` (call) or `"open_arrow"` + dashed (return); `captions.data[].text` = message label | Connector with `position` only (no `attached_object`), diagonal lines, freeform polylines |
-| Self-call loop on one lifeline | `connector` whose `start` and `end` both attach to the same lifeline id, with `turning_points` forming a right-angle loop on the right | Same as message; ensure both endpoints share the same node id | Long diagonal back to the same head, curve through another lifeline |
-| Combined fragment frame (`alt` / `opt` / `loop` / `par`) | `combined_fragment` | `text.text` = guard / description; multi-region operators (`alt`, `par`) use `meta.row_num` ≥ 2 + matching `meta.row_sizes`; operator label belongs in the top-left pentagon corner | Plain `round_rect`, grouped rectangles, SVG polygon, stacked separate frames for a multi-branch `alt` |
-| Side note / annotation pinned to a lifeline | `note_shape` | `text.text`, `x/y` near the target lifeline | Inline `text_shape` floating without a frame, captions stuffed into a connector that isn't a message |
-| Free text label (legend, title) outside the flow | `text_shape` | `text.text`, `x/y` | Do **not** use `text_shape` for participant names, lifelines, messages, fragments, or notes |
-| Grouping / background panel around the whole diagram | `section` | `text.text` = section title, contains child node ids | Do not wrap individual fragments in `section`; that is `combined_fragment`'s job |
-
-**Quick decision rules**
-
-1. **"It's a participant header"** → `composite_shape` (object) or actor `composite_shape` (human). Never `round_rect` / `text_shape` directly.
-2. **"It's a vertical line under a head"** → `life_line`. Never a `connector`.
-3. **"It's an arrow between two lifelines"** → `connector` with `attached_object` on both ends. Never coordinate-only endpoints.
-4. **"It's a branching / looping / parallel region"** → `combined_fragment`. Never a plain rectangle, never multiple stacked frames for one `alt`.
-5. **"It's free-floating commentary"** → `note_shape` (anchored to the flow) or `text_shape` (legend only).
-6. **Sanity check before writing back:** every emitted node's `type` should appear in the table above. If it doesn't, you picked the wrong shape — re-map the intent to the correct row.
+1. **Participant head** → `composite_shape` (object) or `actor` / `composite_shape{actor}` (human). Never `round_rect` / `text_shape` directly.
+2. **Vertical line under a head** → `life_line`. Never a `connector`.
+3. **Activation bar** → narrow `life_line` (or `activation` if the template uses that variant). Never a plain rectangle.
+4. **Arrow between two lifelines** → `connector` with `attached_object` ids on BOTH ends. Coordinate-only endpoints, diagonals, or polylines that bypass a lifeline are all bugs.
+5. **Branching / looping / parallel region** → `combined_fragment`. Multi-region operators (`alt`, `par`) live inside ONE fragment's `meta.row_num` / `meta.row_sizes`, never as stacked separate frames, never as plain rectangles.
+6. **Side commentary** → `note_shape` (anchored) or `text_shape` (legend only — never for participant / message / fragment text).
+7. **Sanity sweep before writing back:** every emitted `type` must appear in the sequence row of `references/native-types.md`. Any rogue `type` means the wrong shape was picked.

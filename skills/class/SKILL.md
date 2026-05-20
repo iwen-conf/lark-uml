@@ -165,6 +165,8 @@ When the board already has a template, follow the template's existing class-box 
 
 ## Native node composition
 
+Pick every native `type` from the matrix in [`../../references/native-types.md`](../../references/native-types.md) (see the class row). Every class / interface / abstract box must be a single `table_uml` node (header row + attribute rows + method rows inside `table.cells`), **never** three stacked `composite_shape` rectangles. Relationships are `connector` nodes, with arrow-head style (hollow / filled triangle / diamond / open) carrying the relationship semantics.
+
 Build the class diagram out of these native whiteboard primitives. Do not express any part of the diagram as PlantUML, Mermaid, or SVG.
 
 - **Class box** — native rectangle, divided into three stacked regions (class name on top, attributes in the middle, methods at the bottom). The board's existing class boxes already use a specific structure; clone one and overwrite its text rather than building a new shape.

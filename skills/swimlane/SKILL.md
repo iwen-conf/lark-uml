@@ -39,6 +39,8 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 
 ## Native node composition
 
+Pick every native `type` from the matrix in [`../../references/native-types.md`](../../references/native-types.md) (see the swimlane row). Each lane is a `section` (never a plain rectangle); actions / decisions / start / end inside the lane are `composite_shape` variants; cross-lane handoffs are `connector`s with `attached_object` ids bound on BOTH ends and anchors matching lane geometry.
+
 Build the swimlane out of these native whiteboard primitives. Do not express any part of the diagram as Mermaid, PlantUML, or SVG.
 
 - **Lane** — native group / container shape (one per role, team, system, or stage). Lane header text uses the role name in business language. New lanes are created by duplicating an existing lane and editing its header.

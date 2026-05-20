@@ -42,6 +42,8 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 
 ## Native node composition
 
+Pick every native `type` from the matrix in [`../../references/native-types.md`](../../references/native-types.md) (see the use case row). The system boundary is a `composite_shape` rectangle (not a `section`); actors are `actor` (or `composite_shape{actor}` if the template embeds them) **outside** the boundary; use cases are `composite_shape{ellipse}` inside the boundary; every relationship is a `connector` with end / arrow style carrying the include / extend / generalization semantics.
+
 Build the use case diagram out of these native whiteboard primitives. Do not express any part of the diagram as PlantUML, Mermaid, or SVG.
 
 - **System boundary** — native rectangle with the system name in the header. All use case ovals sit inside it.

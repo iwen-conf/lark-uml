@@ -44,6 +44,8 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 
 ## Native node composition
 
+Pick every native `type` from the matrix in [`../../references/native-types.md`](../../references/native-types.md) (see the network row). Zones / subnets / VPCs are `section` containers; routers / firewalls / switches / LBs / hosts / VMs / pods / service endpoints are `composite_shape` rectangles with the template's label scheme; the internet / external cloud uses the template's cloud-shaped `composite_shape`. Links are `connector`s labeled with network-layer facts only (`TCP/443`, `VLAN 10`) — never business semantics.
+
 Build the network topology out of these native whiteboard primitives. Do not express any part of the diagram as Mermaid, PlantUML, or SVG.
 
 - **Zone** — native group / container, one per Internet boundary, DMZ, public subnet, private subnet, VPC, on-prem segment, or partner network. Header carries zone name and CIDR if provided.

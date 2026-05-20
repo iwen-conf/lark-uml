@@ -39,6 +39,8 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 
 ## Native node composition
 
+Pick every native `type` from the matrix in [`../../references/native-types.md`](../../references/native-types.md) (see the flowchart row). Start / end, process steps, decisions, and merges are all `composite_shape` variants (`stadium` / `round_rect` / `diamond` / `circle`) — never `cylinder` / `actor` / `table_uml`, those belong in other skills. Branch labels live in `connector.captions`, not as floating `text_shape`.
+
 Build the flowchart out of these native whiteboard primitives. Do not express any part of the diagram as Mermaid, PlantUML, or SVG — these are descriptions of what to put into raw, not a syntax to write.
 
 - **Start / End** — native rounded / stadium / circle shape, single instance each per primary flow.

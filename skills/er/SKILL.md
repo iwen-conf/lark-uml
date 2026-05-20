@@ -43,6 +43,8 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 
 ## Native node composition
 
+Pick every native `type` from the matrix in [`../../references/native-types.md`](../../references/native-types.md) (see the ER row). Every entity must be a single `table_uml` node (header row + field rows inside `table.cells`), **never** stacked rectangles. Relationship `connector`s bind to PK / FK row ids — not to the entity header — and many-to-many is materialized as its own junction `table_uml`, never as a `*..*` line.
+
 Build the ER diagram out of these native whiteboard primitives. Do not express any part of the diagram as PlantUML, Mermaid, or SVG.
 
 - **Entity** — native rectangle with a header row (table name + optional Chinese display name) and one stacked row per field. New entities are produced by duplicating an existing entity and editing the header and rows.
