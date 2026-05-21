@@ -91,6 +91,19 @@ Always pipe through stdin. Do not paste raw JSON into chat as the deliverable.
 - `waypoints` may shape a route but must not replace endpoint binding.
 - If the validation fails, do not write back.
 
+### Sequence-specific pre-write gates
+
+When the active skill is `lark-uml:sequence`, additionally walk the **Branch validation checklist** in `skills/sequence/SKILL.md` against every `combined_fragment` in the raw. The following are **hard gates** — any failure means do not call `+update`:
+
+1. **Causality.** No read / validate / query message sits *inside* a region whose guard depends on the data that message produces. Such messages belong above the fragment.
+2. **Closed loop.** Every backend-touching region carries an explicit `后端 → 前端` response (solid or dashed) before any `前端 → 用户` prompt. Negative regions (4xx / business error) included.
+3. **Non-empty regions.** Every region inside an `alt` / `par` has ≥ 1 bound message connector. Empty region → switch to `opt` or fill the missing domain event.
+4. **Explicit negative domain event.** Regions guarded by `[缺勤]` / `[拒绝]` / `[超时]` / `[作废]` write an explicit status to the persistence lifeline; silence is not allowed.
+5. **No hedged labels.** No arrow inside an `alt` carries a label that smuggles both branches (`成功或业务错误`, `200 or 400`, `结果(成功 / 失败)`).
+6. **Minimal frame scope.** Each fragment's `y` range covers only its dependent messages; its `x` range covers only the lifelines that participate in at least one message inside the fragment.
+7. **Monotonic `y` across fragments.** Business causality (e.g. `报名 → 出勤 → 评价`) reads top-to-bottom; no later step is drawn above an earlier step.
+8. **Contended-resource annotation.** If the flow modifies 容量 / 积分 / 库存 / 余额 or asserts write-once (评价 / 支付 / 退款), a `note_shape` marks the transaction boundary or idempotency key adjacent to the relevant activation or fragment.
+
 ## Step 6 — Write and verify
 
 1. Write raw through `+update --input_format raw`.
