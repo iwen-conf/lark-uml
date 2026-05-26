@@ -25,6 +25,31 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 
 ## Diagram-specific rules
 
+### Message format & layering convention
+
+These rules define the standard visual vocabulary for sequence diagram messages. They apply to every board produced or modified by this skill.
+
+- **Participant naming.** Human actors use plain names with the `actor` stick-figure type (e.g. `用户`). System-layer participants use the `:ClassName` format with a colon prefix — the colon signals a typed system component (e.g. `:EmotionController`, `:EmotionService`, `:EmotionRecordMapper`). Storage-layer participants use plain technical names (e.g. `MySQL`).
+- **Default layer order (left to right).** Human actor → `:XController` → `:XService` → `:XMapper` / `:XDao` → Storage. This mirrors the standard layered architecture: Controllers → Service → Dao → DB. Derive the actual class names from the system's real code.
+- **Message numbering.** Every message label starts with a number followed by a colon and a space: `"N: content"`. Numbers increase top-to-bottom across the entire diagram in one continuous sequence covering both forward (solid) and return (dashed) messages.
+- **Forward message structure.** The forward call chain consists of exactly five messages progressing left-to-right across adjacent lifelines:
+  1. Input parameters from the human actor to the Controller (e.g. `"1: moodTag, intensity, content"`)
+  2. Controller method with parameter type (e.g. `"2: checkin(CheckinRequest)"`)
+  3. Service method with parameter type (e.g. `"3: checkin(CheckinRequest)"`)
+  4. Mapper / Dao method with parameter type (e.g. `"4: insert(BizEmotionRecord)"`)
+  5. SQL statement executed against the storage layer (e.g. `"5: INSERT INTO biz_emotion_record (user_id, tag_id, note, ...)"`)
+  All methods (messages 2–4) must include their parameter types. Bare method names without parameters are not allowed.
+- **Return message structure.** Return messages follow the reverse path right-to-left, each labeled with the return type:
+  6. Storage → Dao: return type (e.g. `"6: int"`)
+  7. Dao → Service: return type (e.g. `"7: CheckinResponse"`)
+  8. Service → Controller: return type (e.g. `"8: CheckinResponse{checkinId, date}"`)
+  9. Controller → Human actor: wrapped result (e.g. `"9: Result<CheckinResponse>"`)
+- **Activation bar discipline.** Every participant column **except the first human actor** gets an activation bar. The activation bar starts at the first incoming message to that participant and ends at the last return message from that participant. The human actor column never carries an activation bar.
+- **One round trip only.** The diagram shows exactly one forward call chain (messages 1–5) and one return chain (messages 6–9). Do not add extra acknowledgment messages, intermediate processing steps, or additional "render / display" messages beyond the single return to the human actor. When branching logic is required, use a `combined_fragment` (`alt` / `opt`) around the relevant messages — but each branch still follows the same numbered forward-then-return structure internally.
+- **Derive names from real code.** Participant class names, method signatures, parameter types, return types, and SQL table/column names must be extracted from the actual project source code. Do not invent placeholder names. If the code is unavailable, ask the user for the correct identifiers before writing.
+
+### Layout & geometry rules
+
 - **Participant head alignment.** Every participant header (`actor` / `participant` / `object` rectangle) sits on the **same top horizontal baseline**. Identical `y`. Left-to-right ordering. Uniform horizontal spacing. Uniform size. No drifting heads.
 - **Lifeline discipline.** Every participant has a vertical lifeline directly below its header. Lifelines are **parallel, strictly vertical, identical length, bottom-`y` aligned**. Each lifeline's `x` is **exactly** the center `x` of its participant header.
 - **Messages are horizontal.** Every message connector endpoint is bound to a lifeline (or its participant head). The two endpoints share the **same `y`** (within rendering tolerance). Messages stack top-to-bottom; their `y` coordinates increase monotonically. **No diagonal lines. No freeform polylines. No "point a to point b" geometry that bypasses lifelines.**
@@ -83,7 +108,7 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 
 Build the sequence diagram out of these native whiteboard primitives. Do not express any part of the diagram as PlantUML, Mermaid, or SVG.
 
-- **Participant header** — native rectangle (or actor stick-figure for human actors), one per role. All headers share the same top `y` and uniform spacing. Headers are produced by cloning an existing header.
+- **Participant header** — native rectangle (or actor stick-figure for human actors), one per role. All headers share the same top `y` and uniform spacing. System-layer headers use the `:ClassName` format with a colon prefix (e.g. `:EmotionController`); human actors use plain names (e.g. `用户`); storage layers use plain technical names (e.g. `MySQL`). Headers are produced by cloning an existing header of the same kind.
 - **Lifeline** — native vertical line / dashed line directly below its participant header. Lifelines are strictly vertical, identical length, bottom-`y` aligned, with `x` equal to the center `x` of the header.
 - **Activation bar** — native narrow rectangle centered on the lifeline. It belongs to the lifeline visually but remains a distinct node so that messages can bind to it.
 - **Message connector** — native `type: "connector"` whose `connector.from` and `connector.to` reference participant / lifeline / activation node ids. Both endpoints share the same `y`. Synchronous calls use solid line + filled arrow; returns use dashed line + open arrow. Message text goes in `connector.label`.
@@ -96,7 +121,7 @@ Every message connector must be a native connector with bound endpoints. Diagona
 
 Pick the native `type` by intent before you emit any node. The full matrix lives in [`../../references/native-types.md`](../../references/native-types.md); the sequence row spells out exactly which types are allowed and which substitutes will silently break the diagram. **Sequence-specific reminders that override generic instincts:**
 
-1. **Participant head** → `composite_shape` (object) or `actor` / `composite_shape{actor}` (human). Never `round_rect` / `text_shape` directly.
+1. **Participant head** → `composite_shape` (object, labeled `:ClassName`) or `actor` / `composite_shape{actor}` (human, plain name). Never `round_rect` / `text_shape` directly.
 2. **Vertical line under a head** → `life_line`. Never a `connector`.
 3. **Activation bar** → narrow `life_line` (or `activation` if the template uses that variant). Never a plain rectangle.
 4. **Arrow between two lifelines** → `connector` with `attached_object` ids on BOTH ends. Coordinate-only endpoints, diagonals, or polylines that bypass a lifeline are all bugs.
