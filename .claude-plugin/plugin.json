@@ -1,7 +1,7 @@
 {
   "name": "lark-uml",
   "version": "0.1.0",
-  "description": "Feishu/Lark whiteboard UML skills — one specialist skill per diagram type, all driven by lark-cli.",
+  "description": "Feishu/Lark native whiteboard UML and Slides skills, all driven by lark-cli.",
   "author": {
     "name": "iwen-conf",
     "url": "https://github.com/iwen-conf"

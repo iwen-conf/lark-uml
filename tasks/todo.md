@@ -1,15 +1,17 @@
-# lark-prompt absorption into lark-uml
+# Add native Slides / PPT skill
 
 ## Plan
 
-- [x] Add native connector rules to `lark-uml` shared references.
-- [x] Change shared workflow from external diagram source first to raw-first whiteboard edits.
-- [x] Update README so `lark-uml` contains the prompt's constraints and no longer depends on `lark-prompt`.
-- [x] Tighten all diagram skills to inherit raw/native connector execution and stop recommending Mermaid / PlantUML as the write path.
-- [x] Verify there are no remaining runtime references that require `lark-prompt`.
+- [x] Inspect existing skill conventions and shared lark-cli rules.
+- [x] Confirm current `lark-cli slides` command surface and schema shape.
+- [x] Add `lark-uml:ppt` as an execution-oriented Feishu Slides skill.
+- [x] Update README skill list, requirements, and repository layout.
+- [x] Verify Markdown files, command references, and git diff.
+- [x] Tighten PPT skill for 12-15 pages, numeric text, replaceable image slots, and native Slides-only delivery.
 
 ## Review
 
-- Added `references/connectors.md` as the shared hard-rule source for native connector binding, coordinate endpoint limits, waypoint limits, pre-write validation, and post-write verification.
-- Updated `references/workflow.md` to require raw query, raw modification, raw update, fact/template inventories, and structural validation.
-- Updated all diagram skills so Mermaid / PlantUML / SVG routes are forbidden even as private sketches, not just as write paths.
+- Added `skills/ppt/SKILL.md` with an execution-oriented Feishu Slides workflow, content rules, visual direction, payload-only mode, and quality gates.
+- Confirmed local `lark-cli slides` supports `+create`, `+replace-slide`, `+media-upload`, and `xml_presentation.slide.*`; checked create / replace schemas.
+- Updated README and plugin metadata so the plugin describes both native whiteboard UML and native Slides skills.
+- Updated the PPT skill defaults to 12-15 pages, require numeric expressions on content slides, require replaceable image slots when images are used, and explicitly forbid stopping before native Feishu Slides write operations.
