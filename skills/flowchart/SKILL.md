@@ -1,6 +1,6 @@
 ---
 name: lark-uml:flowchart
-description: 飞书画板流程图：执行型 Skill。当用户要在飞书画板上绘制或修改流程图（开始 / 结束、处理步骤、判断分支、回退路径、异常处理）时使用。本 skill 直接驱动 lark-cli whiteboard 改写画板，不输出 Mermaid / SVG 代码。
+description: 飞书画板流程图 / 活动图：执行型 Skill。当用户要在飞书画板上绘制或修改流程图、活动图（开始 / 结束、处理步骤、判断分支、回退路径、异常处理）时使用。本 skill 直接驱动 lark-cli whiteboard 改写画板，不输出 Mermaid / PlantUML / SVG 代码。
 ---
 
 # `lark-uml:flowchart`
@@ -17,7 +17,9 @@ Specialist skill for **flowcharts** on a Feishu / Lark whiteboard. The agent rea
 
 Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md). Apply the native connector rules in [`../../references/connectors.md`](../../references/connectors.md).
 
-**Execution route:** raw-first, native-only. Read the board as raw, edit native flow nodes and native connectors in place, then write raw back. Step, decision, branch, rollback, and exception arrows are business relationships, so every arrow must bind to source and target node ids. **No Mermaid / PlantUML / SVG anywhere in the loop, not even as a private sketch** — reason directly about native node ids and native connectors.
+**Execution route:** raw-first, native-only. Read the board as raw, edit native flow / activity nodes and native connectors in place, then write raw back. Step, action, decision, branch, rollback, and exception arrows are business relationships, so every arrow must bind to source and target node ids. **No Mermaid / PlantUML / SVG anywhere in the loop, not even as a private sketch** — reason directly about native node ids and native connectors.
+
+**Activity diagram syntax guard.** This skill may describe UML activity semantics, but it must not create PlantUML activity source. If a caller, upstream template, or emergency compatibility path explicitly forces PlantUML outside this skill's normal route, `elseif` is still forbidden: the PlantUML parser used by our drawing path does not support it. Express multi-way choices as nested `if` / `else` / `endif` blocks, or better, as native decision diamonds with separate labeled connectors. Any `elseif` / `else if` token in generated diagram text is a hard validation failure.
 
 **Default mode is modify-in-place.** Duplicate and adapt existing template elements rather than redrawing the board. Only redraw from scratch when the user explicitly asks for a clean rebuild, the existing diagram type is wrong, or the structure is too corrupted to edit safely.
 
@@ -26,6 +28,7 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 - **Anchored start and end.** Exactly one start node and one end node per primary flow. Start / end use the stadium or circle shape; processing steps use the rectangle; decisions use the diamond. Same role → same shape across the whole diagram.
 - **Main flow first.** The happy path is unambiguous and laid out top-to-bottom (or left-to-right) in a single dominant direction. Side branches peel off and either rejoin the main flow or terminate cleanly.
 - **Decision branches.** Every diamond has exactly **one** incoming edge and **two or more** outgoing edges. Every outgoing edge carries an explicit branch label written in business language (`是` / `否`, `通过` / `不通过`, `Yes` / `No`). Branches must be mutually exclusive and cover every possible outcome.
+- **Multi-way decisions.** For three or more outcomes, use one native decision diamond with three or more labeled outgoing connectors, or split into nested decision diamonds when that better matches the business logic. Do not encode multi-way decisions as `elseif` / `else if` text, pseudo-code, or a pasted PlantUML activity snippet.
 - **Merge points.** When multiple branches converge, route them through a merge node (or a clearly labeled junction). Do not drop several incoming arrows onto the same processing step without a visible merge.
 - **Rollback and exception paths.** A failure / rollback branch must terminate at a real handler (end node, retry step, or back-into-main with a labeled re-entry). Never leave a branch dangling.
 - **Direction discipline.** Arrows follow the dominant flow direction. Explicit backward jumps (retries, loops) must be labeled with the condition that triggers them.
@@ -41,7 +44,7 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 
 Pick every native `type` from the matrix in [`../../references/native-types.md`](../../references/native-types.md) (see the flowchart row). Start / end, process steps, decisions, and merges are all `composite_shape` variants (`stadium` / `round_rect` / `diamond` / `circle`) — never `cylinder` / `actor` / `table_uml`, those belong in other skills. Branch labels live in `connector.captions`, not as floating `text_shape`.
 
-Build the flowchart out of these native whiteboard primitives. Do not express any part of the diagram as Mermaid, PlantUML, or SVG — these are descriptions of what to put into raw, not a syntax to write.
+Build the flowchart / activity diagram out of these native whiteboard primitives. Do not express any part of the diagram as Mermaid, PlantUML, or SVG — these are descriptions of what to put into raw, not a syntax to write.
 
 - **Start / End** — native rounded / stadium / circle shape, single instance each per primary flow.
 - **Process step** — native rectangle. Same fill / border style across all steps; new steps clone an existing step.
@@ -51,3 +54,11 @@ Build the flowchart out of these native whiteboard primitives. Do not express an
 - **Branch label** — `connector.label` (or the label child the connector style already uses on this board), written as business-language Chinese.
 
 When extending the diagram, copy the closest existing shape, text, or connector and adapt content, position, and binding — do not invent a new visual vocabulary on the board.
+
+## Pre-write validation
+
+Before writing the board back:
+
+- Search every newly generated visible text field, note, connector caption, and any temporary diagram-source payload for `elseif` or `else if`.
+- If either token exists, do not write. Convert it to native nested decision diamonds or, only in a forced external PlantUML compatibility path, to nested `if` / `else` / `endif`.
+- Confirm every branch label is business text in `connector.captions`, not pseudo-code.

@@ -1,13 +1,13 @@
 ---
 name: lark-uml:ppt
-description: 飞书原生演示文稿 / PPT：执行型 Skill。当用户要把项目代码、README、接口文档、测试数据或毕业设计材料生成或改写为飞书 Slides 演示文稿（答辩 PPT、项目汇报、技术方案、路演材料）时使用。本 skill 直接驱动 lark-cli slides / 飞书 Slides OpenAPI 创建和编辑云端演示文稿，不输出 PPTX、HTML、Markdown 或截图；除非用户明确只要 payload，否则交付物必须是可编辑的飞书原生 Slides。
+description: 飞书原生演示文稿 / PPT：执行型 Skill。当用户要把项目代码、README、接口文档、测试数据或毕业设计材料生成或改写为飞书 Slides 演示文稿（答辩 PPT、项目汇报、技术方案、路演材料）时使用。本 skill 直接驱动 lark-cli slides / 飞书 Slides OpenAPI 创建和编辑云端演示文稿，不输出 PPTX、HTML、Markdown 或截图；严禁用 python-pptx / 本地 PPTX / 飞书导入作为替代方案；除非用户明确只要 payload，否则交付物必须是可编辑的飞书原生 Slides。
 ---
 
 # `lark-uml:ppt`
 
 Specialist skill for **native Feishu / Lark Slides presentations**. The agent turns project evidence into an editable cloud presentation through `lark-cli slides` and, only when needed, `lark-cli api` for uncovered Slides OpenAPI surfaces.
 
-The final artifact is the created or updated Feishu Slides document. It is not a `.pptx`, Markdown outline, HTML prototype, screenshot deck, or pasted explanatory answer.
+The final artifact is the created or updated Feishu Slides document. It is not a `.pptx`, Markdown outline, HTML prototype, screenshot deck, imported Office file, or pasted explanatory answer. A locally generated PPTX that is uploaded or imported into Feishu is still a forbidden PPTX route, not a native Slides success.
 
 ## Inputs
 
@@ -18,22 +18,50 @@ The final artifact is the created or updated Feishu Slides document. It is not a
 - `language` — `zh-CN` (default) or `en-US`. Slide-visible text only.
 - `page_count` — default `12-15` for graduation defense / project report. Keep fewer pages only when the user explicitly asks for a short deck.
 
+## Native Slides hard contract
+
+- **Native-only creation.** Create or edit decks only through `lark-cli slides` commands or official Feishu / Lark Slides OpenAPI called with `lark-cli api`.
+- **No PPTX import fallback.** Never use `python-pptx`, PowerPoint, Keynote, LibreOffice, Office conversion tools, local `.pptx` generation, Drive upload, or Feishu document import as a workaround for Slides API / CLI friction.
+- **No "more reliable PPTX" route.** Do not say or act on variants of "switch to a more reliable plan: generate a PPTX file, then import it into Feishu." That is an invalid route for this skill.
+- **Block instead of degrading.** If native Slides creation is blocked by missing CLI support, schema uncertainty, permission, scopes, payload limits, or API errors, stop and report the exact blocker, attempted native command/API, and the next native-only fix. Do not create a substitute artifact.
+- **Schema before XML.** Before writing any SML XML, read `references/slides-native.md` and check `lark-cli schema slides.xml_presentation.slide.create` / `slides.xml_presentation.slide.replace`. Do not invent XML elements from memory.
+
 ## Workflow
 
 1. Load `lark-shared` for auth, identity, permission, and write-safety rules.
-2. Prefer the registered `lark-cli slides` commands. Check `lark-cli slides --help` and command-specific `--help` before falling back to raw OpenAPI.
-3. If the needed Slides operation is not registered, load `lark-openapi-explorer`, discover the official API, then call it with `lark-cli api`. Do not guess paths, request bodies, or scopes.
-4. Read the project evidence before writing content. Use local files, local indexes, and repository docs first.
-5. Build a compact deck model in memory: slide goal, action title, evidence, visual metaphor, layout family, speaker takeaway.
-6. Convert the model into Lark Slides XML content or replace parts accepted by `lark-cli slides`. Do not ask the model to hand-author a deeply nested coordinate JSON deck unless the user explicitly requested a payload-only deliverable.
-7. Preview write requests with `--dry-run` when practical, then create or update the cloud deck through native Feishu Slides operations. Do not stop at a local JSON, Markdown outline, HTML mock, image export, or PPTX.
-8. Read the deck back and verify slide count, page order, visible title text, and absence of placeholder-only pages.
+2. Read `references/slides-native.md` before generating or editing slide XML.
+3. Prefer the registered `lark-cli slides` commands. Check `lark-cli slides --help` and command-specific `--help` before falling back to raw OpenAPI. A CLI failure is not permission to switch to PPTX/import tooling.
+4. If the needed Slides operation is not registered, load `lark-openapi-explorer`, discover the official API, then call it with `lark-cli api`. Do not guess paths, request bodies, or scopes. If official native creation cannot be verified, stop as blocked.
+5. Read the project evidence before writing content. Use local files, local indexes, and repository docs first.
+6. Build a compact deck model in memory: slide goal, action title, evidence, visual metaphor, layout family, speaker takeaway.
+7. Convert the model into SML 2.0 slide XML using the native reference: visible text must be inside `<data><shape type="text" ...><content ...><p>...</p></content></shape></data>`. Do not put `<title>`, `<body>`, or bare `<p>` directly under `<slide>`.
+8. Preview write requests with `--dry-run` when practical, then create or update the cloud deck through native Feishu Slides operations. Do not stop at a local JSON, Markdown outline, HTML mock, image export, PPTX, or imported PPTX.
+9. Read the deck back and verify slide count, page order, visible title text, and non-empty `<data>` for every intended page.
 
 ## Execution route
 
 ### Create a new deck
 
-Use `lark-cli slides +create` for up to 10 initial pages:
+Use native creation only. For real decks, especially 12-15 page reports, complex Chinese text, images, or nested XML, default to the two-step route:
+
+1. Create a blank native Slides document:
+
+```bash
+lark-cli slides +create \
+  --as user \
+  --title "项目毕业答辩"
+```
+
+2. Add each page with `xml_presentation.slide.create`:
+
+```bash
+lark-cli slides xml_presentation.slide create \
+  --as user \
+  --params '{"xml_presentation_id":"...","revision_id":-1}' \
+  --data "$(jq -n --arg content '<slide xmlns="http://www.larkoffice.com/sml/2.0"><data><shape type="text" topLeftX="80" topLeftY="80" width="800" height="120"><content textType="title"><p>页面标题</p></content></shape></data></slide>' '{slide:{content:$content}}')"
+```
+
+Use `lark-cli slides +create --slides` only for simple decks with no more than 10 short, low-risk pages:
 
 ```bash
 lark-cli slides +create \
@@ -42,9 +70,43 @@ lark-cli slides +create \
   --slides '@slides.json'
 ```
 
-`slides.json` is a JSON array of `<slide>...</slide>` XML strings. If the deck needs more than 10 pages, create the first batch, then add pages with `lark-cli slides xml_presentation.slide create`.
+`slides.json` is a JSON array of complete `<slide>...</slide>` XML strings. `+create --slides` has a hard limit of 10 pages and is not atomic: the presentation and earlier pages may remain if a later page fails. For more than 10 pages, create a blank deck first, then add pages one by one with `xml_presentation.slide.create`.
 
-If the installed CLI version does not accept `@file` for `--slides`, pass the same JSON array string directly or pipe through the command's documented input support after checking `lark-cli slides +create --help`.
+If the installed CLI version does not accept `@file` for `--slides`, pass the same JSON array string directly or pipe through the command's documented input support after checking `lark-cli slides +create --help`. For complex XML, avoid long inline shell strings and use `jq -n --arg content "$SLIDE_XML" '{slide:{content:$content}}'` with `xml_presentation.slide.create`.
+
+If `+create` cannot create the deck, try the official native route only: `xml_presentation.slide.create` or a verified Slides OpenAPI call through `lark-cli api`. If those native routes are unavailable, report the blocker and stop. Do not generate a PPTX and do not import one into Feishu.
+
+### SML XML minimum shape
+
+Every created page must use SML 2.0 structure that survives read-back:
+
+```xml
+<slide xmlns="http://www.larkoffice.com/sml/2.0">
+  <style>
+    <fill><fillColor color="rgb(248,250,252)"/></fill>
+  </style>
+  <data>
+    <shape type="text" topLeftX="80" topLeftY="80" width="800" height="120">
+      <content textType="title">
+        <p>页面标题</p>
+      </content>
+    </shape>
+    <shape type="text" topLeftX="80" topLeftY="200" width="800" height="180">
+      <content textType="body">
+        <p>正文内容</p>
+      </content>
+    </shape>
+  </data>
+</slide>
+```
+
+Rules:
+
+- `<slide>` direct children are only `<style>`, `<data>`, and `<note>`.
+- Text belongs in `<content>` inside a `shape`; never write bare `<p>`, `<text>`, `<title>`, or `<body>` directly under `<slide>`.
+- Escape visible text before XML embedding: `&`, `<`, and `>`.
+- For gradients, use `rgba()` stops with percentages; malformed gradients can silently become white.
+- After every write, read back XML and treat empty `<data/>` as failure even if the API returned success.
 
 ### Modify an existing deck
 
@@ -79,7 +141,18 @@ Use `str_replace` for text-only updates and `block_replace` / `block_insert` for
 
 ### Images and media
 
-Use `lark-cli slides +media-upload` or `<img src="@./local.png">` placeholders supported by `+create`. Do not embed base64 image blobs in slide XML or JSON.
+Use `lark-cli slides +media-upload` or `<img src="@./local.png">` placeholders supported by `+create --slides`. Do not embed base64 image blobs in slide XML or JSON.
+
+When adding images through `xml_presentation.slide.create` or `+replace-slide`, do not use `@./local.png`. Upload first:
+
+```bash
+lark-cli slides +media-upload \
+  --as user \
+  --file ./local.png \
+  --presentation "..."
+```
+
+Then use the returned `file_token` in `<img src="...">`.
 
 Images are allowed and often useful, but every image must be replaceable:
 
@@ -146,18 +219,24 @@ Before reporting completion:
 
 - Verify `lark-cli` created or updated a real Slides document and capture the URL / id from the response.
 - Re-read the deck XML and confirm every intended slide exists.
+- Confirm every intended slide has non-empty `<data>` and at least one visible native element such as `shape`, `img`, `line`, `table`, `chart`, or `icon`.
+- Confirm intended title/body text appears in the read-back XML, not only in the local payload.
 - Confirm all titles are action titles, not neutral labels.
 - Confirm the deck has 12-15 pages unless the user requested a different count.
 - Confirm every non-cover/non-closing content slide has at least one numeric expression or bracketed numeric placeholder.
 - Confirm placeholder metrics are bracketed and not presented as measured facts.
 - Confirm media references resolve through uploaded file tokens or supported local image placeholders.
 - Confirm replaceable image slots are labeled and critical claims remain editable as text.
-- Confirm no deliverable is a PPTX, HTML page, Markdown outline, screenshot-only deck, or unsupported hand-written API fantasy.
+- Confirm no deliverable is a PPTX, imported PPTX, HTML page, Markdown outline, screenshot-only deck, or unsupported hand-written API fantasy.
+- Confirm no `python-pptx`, Office export/conversion tool, Drive upload/import, or Feishu import route was used as a fallback.
 
 ## Failure modes
 
 - **Deep JSON hallucination.** The model invents nested coordinate objects that do not match Slides API. Fix by using `lark-cli slides` XML or official schema-derived payloads.
+- **Invalid SML structure.** The API returns success but read-back shows `<data/>` or missing text because XML used `<text>`, bare `<p>`, `<title>`, or `<body>` in the wrong place. Fix by using `<data><shape type="text" ...><content><p>...</p></content></shape></data>`.
+- **Partial native create.** `+create --slides` fails after creating the deck or some pages. Fix by recording `xml_presentation_id`, reading the deck back, then continuing with `xml_presentation.slide.create`; delete duplicates only after confirming actual slide ids.
 - **Template monotony.** Every page looks the same despite the user asking for varied style. Fix by assigning a visual family per slide while keeping typography and margins readable.
 - **Fake metrics.** Unmeasured performance claims appear as facts. Fix by replacing them with bracketed placeholders or source-backed numbers.
 - **Code dump slides.** Long source blocks consume the page. Fix by extracting the engineering decision, API contract, state transition, or metric.
 - **Unverified write.** The command returns without checking the cloud result. Fix by reading the deck back before final response.
+- **PPTX import fallback.** The agent proposes or creates a local PPTX with `python-pptx` or another Office tool and imports it into Feishu. This is forbidden. Fix by returning to `lark-cli slides` / official Slides OpenAPI, or stop with a native-route blocker if those APIs cannot complete the write.

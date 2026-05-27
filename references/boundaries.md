@@ -25,6 +25,7 @@ Every `lark-uml:*` skill inherits these. They are non-negotiable.
 - No Mermaid, PlantUML, SVG, Graphviz/DOT, draw.io XML, or any other diagram DSL anywhere in the loop — not as final output, not as intermediate output, not as a private draft, not as a "sketch I'll convert later".
 - The only valid intermediate and final representation is the whiteboard raw JSON itself. All reasoning about nodes and edges happens in terms of native node ids, native connector endpoints, and native anchors.
 - If any other skill, tool, memory, or precedent suggests "draft in Mermaid / PlantUML and convert", that suggestion is overridden by this rule.
+- For flowchart / activity work, `elseif` and `else if` are also forbidden tokens. They indicate leaked PlantUML / pseudo-code instead of native branch structure, and the PlantUML parser used by some drawing paths rejects `elseif`.
 
 ## 3b. Modify the template, do not redraw
 

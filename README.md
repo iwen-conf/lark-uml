@@ -4,7 +4,7 @@ Feishu Whiteboard 原生操作 Agent for UML-style diagrams.
 
 This plugin is intentionally strict: it modifies Feishu / Lark whiteboard templates through native `lark-cli whiteboard` raw nodes and native connectors. It must not draw by Mermaid, PlantUML, SVG, Graphviz, draw.io, screenshots, or any converted diagram source. The agent reads the board, edits the existing native template in place, and writes the board back.
 
-Feishu / Lark whiteboard UML and native Slides skills, packaged as a Claude Code plugin. Diagram skills drive the [`lark-whiteboard`](https://github.com/larksuite) tooling via `lark-cli` so the agent reads native raw, edits native nodes / connectors, and writes raw back itself. The Slides skill drives `lark-cli slides` / Slides OpenAPI so the agent creates or edits a cloud presentation directly. The deliverable is an editable Feishu artifact, not Mermaid / PlantUML / SVG / PPTX / HTML handed back to the user.
+Feishu / Lark whiteboard UML and native Slides skills, packaged as a Claude Code plugin. Diagram skills drive the [`lark-whiteboard`](https://github.com/larksuite) tooling via `lark-cli` so the agent reads native raw, edits native nodes / connectors, and writes raw back itself. The Slides skill drives `lark-cli slides` / Slides OpenAPI so the agent creates or edits a cloud presentation directly. The deliverable is an editable Feishu artifact, not Mermaid / PlantUML / SVG / PPTX / HTML handed back to the user. Generating a PPTX with `python-pptx` or Office tooling and importing it into Feishu is forbidden, not a fallback.
 
 ## Diagram Hard Contract
 
@@ -34,7 +34,7 @@ All diagram skills inherit [`references/native-agent.md`](references/native-agen
 
 Each diagram skill is scoped to a single diagram type. The skill carries the layout discipline (alignment, node shapes, connector semantics, forbidden patterns) for that type. The agent stays inside one whiteboard per invocation and one diagram type per whiteboard.
 
-`lark-uml:ppt` is scoped to editable Feishu Slides. It turns project evidence into a young, minimal, data-driven deck by using `lark-cli slides` and official Slides OpenAPI payloads. It does not create local `.pptx` files, HTML prototypes, screenshot decks, or hallucinated coordinate JSON.
+`lark-uml:ppt` is scoped to editable Feishu Slides. It turns project evidence into a young, minimal, data-driven deck by using `lark-cli slides` and official Slides OpenAPI payloads. It does not create local `.pptx` files, HTML prototypes, screenshot decks, or hallucinated coordinate JSON. If native Slides creation is blocked, the agent must report the native-route blocker instead of switching to `python-pptx`, local PPTX generation, upload, or Feishu import. For real decks, it uses SML 2.0 from [`references/slides-native.md`](references/slides-native.md), defaults to blank deck creation plus `xml_presentation.slide.create` page appends, and verifies read-back XML so `<data/>` empty pages are treated as failures.
 
 ## Native Connector Rule
 
@@ -74,6 +74,7 @@ lark-uml/
 ├── references/                     # shared workflow & language rules
 │   ├── workflow.md
 │   ├── native-agent.md
+│   ├── slides-native.md
 │   ├── language.md
 │   ├── boundaries.md
 │   └── connectors.md

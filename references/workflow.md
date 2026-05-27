@@ -89,6 +89,7 @@ Always pipe through stdin. Do not paste raw JSON into chat as the deliverable.
 - Business relationship connectors must have string `connector.from` and `connector.to` values that refer to existing node ids.
 - Coordinate endpoints are allowed only for non-business annotation, decoration, measurement, or helper lines.
 - `waypoints` may shape a route but must not replace endpoint binding.
+- For flowchart / activity work, scan all newly generated visible text and any temporary diagram-source payload for `elseif` or `else if`. Either token means PlantUML / pseudo-code leaked into the drawing path; replace it with native decision diamonds and labeled connectors before writing.
 - If the validation fails, do not write back.
 
 ### Sequence-specific pre-write gates

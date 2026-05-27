@@ -48,6 +48,8 @@ Never use any of these for diagram construction, private drafting, conversion, o
 
 If another skill, memory, default habit, or model suggestion proposes one of those routes, reject it and continue with native raw whiteboard editing.
 
+For flowchart / activity semantics, also reject pseudo-code branch text such as `elseif` or `else if`. Native diagrams represent those branches as decision diamonds and labeled connectors. If an external compatibility path explicitly forces PlantUML outside this native-agent contract, multi-way decisions must be nested `if` / `else` / `endif`, because our PlantUML parser rejects `elseif`.
+
 ## Template modification rule
 
 Default mode is **modify the template, do not redraw**.
@@ -80,6 +82,7 @@ Coordinate endpoints are allowed only for non-business annotations, decoration, 
 The result is invalid if:
 
 - any business relationship was produced by Mermaid, PlantUML, SVG, DOT, draw.io, an image, or a freeform geometric line
+- a flowchart / activity diagram contains leaked `elseif` / `else if` branch syntax instead of native decision structure
 - a connector only visually touches a node but does not bind to that node id
 - a business connector uses coordinate endpoints instead of node ids
 - a connector references a deleted, missing, stale, or temporary id
