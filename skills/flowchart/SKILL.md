@@ -1,64 +1,110 @@
 ---
 name: lark-uml:flowchart
-description: 飞书画板流程图 / 活动图：执行型 Skill。当用户要在飞书画板上绘制或修改流程图、活动图（开始 / 结束、处理步骤、判断分支、回退路径、异常处理）时使用。本 skill 直接驱动 lark-cli whiteboard 改写画板，不输出 Mermaid / PlantUML / SVG 代码。
+description: 飞书画板流程图 / 活动图：执行型 Skill。当用户要在飞书画板上绘制或修改流程图、活动图（开始 / 结束、处理步骤、判断分支、回退路径、异常处理）时使用。本 skill 直接驱动 lark-cli whiteboard 改写画板，默认使用 PlantUML 生成。
 ---
 
 # `lark-uml:flowchart`
 
-Specialist skill for **flowcharts** on a Feishu / Lark whiteboard. The agent reads, edits, and writes the board itself through `lark-cli whiteboard`. The final artifact is the updated whiteboard, not a code block.
+Specialist skill for **flowcharts / activity diagrams** on a Feishu / Lark whiteboard. The agent reads, edits, and writes the board itself through `lark-cli whiteboard`. The final artifact is the updated whiteboard, not a code block.
+
+**Two execution routes:**
+
+| Route | Input format | When |
+|-------|-------------|------|
+| **PlantUML (primary)** | `--input_format plantuml` | First-time creation, clean rebuild, most edits |
+| **Raw native (advanced)** | `--input_format raw` | Precise in-place tweak of an existing native board |
+
+Default to PlantUML.
 
 ## Inputs
 
 - `board` — whiteboard URL or `wbcn...` token. Required.
-- `task` — what to change this turn. Optional; if empty, this is a first-time initialization and the agent designs the flowchart from scratch.
+- `task` — what to change this turn. Optional.
 - `language` — `zh-CN` (default) or `en-US`. Diagram-visible text only.
 
-## Workflow
+## PlantUML route (primary)
 
-Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md). Apply the native connector rules in [`../../references/connectors.md`](../../references/connectors.md).
+### Create or replace
 
-**Execution route:** raw-first, native-only. Read the board as raw, edit native flow / activity nodes and native connectors in place, then write raw back. Step, action, decision, branch, rollback, and exception arrows are business relationships, so every arrow must bind to source and target node ids. **No Mermaid / PlantUML / SVG anywhere in the loop, not even as a private sketch** — reason directly about native node ids and native connectors.
+```bash
+cat << 'PUML' | lark-cli whiteboard +update \
+  --whiteboard-token <token> \
+  --input_format plantuml --source - \
+  --overwrite --as user
+@startuml
+...
+@enduml
+PUML
+```
 
-**Activity diagram syntax guard.** This skill may describe UML activity semantics, but it must not create PlantUML activity source. If a caller, upstream template, or emergency compatibility path explicitly forces PlantUML outside this skill's normal route, `elseif` is still forbidden: the PlantUML parser used by our drawing path does not support it. Express multi-way choices as nested `if` / `else` / `endif` blocks, or better, as native decision diamonds with separate labeled connectors. Any `elseif` / `else if` token in generated diagram text is a hard validation failure.
+Always `--overwrite`. Never put multiple `@startuml`/`@enduml` blocks in one input — run separate calls.
 
-**Default mode is modify-in-place.** Duplicate and adapt existing template elements rather than redrawing the board. Only redraw from scratch when the user explicitly asks for a clean rebuild, the existing diagram type is wrong, or the structure is too corrupted to edit safely.
+### Activity diagram template
 
-## Diagram-specific rules
+```plantuml
+@startuml
+title {业务名称} - 活动图
 
-- **Anchored start and end.** Exactly one start node and one end node per primary flow. Start / end use the stadium or circle shape; processing steps use the rectangle; decisions use the diamond. Same role → same shape across the whole diagram.
-- **Main flow first.** The happy path is unambiguous and laid out top-to-bottom (or left-to-right) in a single dominant direction. Side branches peel off and either rejoin the main flow or terminate cleanly.
-- **Decision branches.** Every diamond has exactly **one** incoming edge and **two or more** outgoing edges. Every outgoing edge carries an explicit branch label written in business language (`是` / `否`, `通过` / `不通过`, `Yes` / `No`). Branches must be mutually exclusive and cover every possible outcome.
-- **Multi-way decisions.** For three or more outcomes, use one native decision diamond with three or more labeled outgoing connectors, or split into nested decision diamonds when that better matches the business logic. Do not encode multi-way decisions as `elseif` / `else if` text, pseudo-code, or a pasted PlantUML activity snippet.
-- **Merge points.** When multiple branches converge, route them through a merge node (or a clearly labeled junction). Do not drop several incoming arrows onto the same processing step without a visible merge.
-- **Rollback and exception paths.** A failure / rollback branch must terminate at a real handler (end node, retry step, or back-into-main with a labeled re-entry). Never leave a branch dangling.
-- **Direction discipline.** Arrows follow the dominant flow direction. Explicit backward jumps (retries, loops) must be labeled with the condition that triggers them.
+start
+:{步骤1};
+:{步骤2};
 
-## Forbidden mixings
+if ({条件}?) then (是)
+  :{分支A};
+else (否)
+  :{分支B};
+endif
 
-- Swimlane responsibility partitions — those belong in `lark-uml:swimlane`.
-- Use case ovals or system boundaries — those belong in `lark-uml:usecase`.
-- Network devices — those belong in `lark-uml:network`.
-- Sequence messages / lifelines — those belong in `lark-uml:sequence`.
+:{步骤3};
+stop
+@enduml
+```
 
-## Native node composition
+### Conventions
 
-Pick every native `type` from the matrix in [`../../references/native-types.md`](../../references/native-types.md) (see the flowchart row). Start / end, process steps, decisions, and merges are all `composite_shape` variants (`stadium` / `round_rect` / `diamond` / `circle`) — never `cylinder` / `actor` / `table_uml`, those belong in other skills. Branch labels live in `connector.captions`, not as floating `text_shape`.
+| Rule | Detail |
+|------|--------|
+| **No background** | Never set `skinparam backgroundColor`. |
+| **Single flow** | One start → one stop per diagram. |
+| **Decision diamonds** | Use `if`/`else`/`endif`. Every branch labeled in Chinese (`是`/`否`, `通过`/`失败`). |
+| **Assume authenticated** | No login-check branches. User is already logged in. |
+| **Real names** | Use actual class/method names from source: `CartService.add`, `FruitMapper.selectById`. |
+| **Top-to-bottom** | Happy path flows downward. Side branches peel off. |
+| **Partition (optional)** | Use `partition "用户端" { ... }` for swimlane-like grouping in activity diagrams. |
 
-Build the flowchart / activity diagram out of these native whiteboard primitives. Do not express any part of the diagram as Mermaid, PlantUML, or SVG — these are descriptions of what to put into raw, not a syntax to write.
+### `elseif` constraint (PlantUML)
 
-- **Start / End** — native rounded / stadium / circle shape, single instance each per primary flow.
-- **Process step** — native rectangle. Same fill / border style across all steps; new steps clone an existing step.
-- **Decision** — native diamond. Exactly one incoming connector, two or more outgoing connectors, each carrying a Chinese branch label (`是` / `否`, `通过` / `不通过`, `成功` / `失败`).
-- **Merge / junction** — native small circle or labeled rectangle; do not drop multiple arrows onto the same step without one.
-- **Connector** — native `type: "connector"` between two existing node ids, with `connector.from` / `connector.to` bound to ids, anchors consistent with relative position, and `polyline` or `rightAngle` routing by default.
-- **Branch label** — `connector.label` (or the label child the connector style already uses on this board), written as business-language Chinese.
+The Feishu PlantUML parser rejects the `elseif` token. Express multi-way choices as nested `if`/`else`:
 
-When extending the diagram, copy the closest existing shape, text, or connector and adapt content, position, and binding — do not invent a new visual vocabulary on the board.
+```plantuml
+if (条件A?) then (是)
+  :分支A;
+else (否)
+  if (条件B?) then (是)
+    :分支B;
+  else (否)
+    :分支C;
+  endif
+endif
+```
 
-## Pre-write validation
+## Raw native route (advanced)
 
-Before writing the board back:
+Use only when editing an existing native whiteboard whose decision diamonds, merged paths, or custom geometry would be lost by over-writing.
 
-- Search every newly generated visible text field, note, connector caption, and any temporary diagram-source payload for `elseif` or `else if`.
-- If either token exists, do not write. Convert it to native nested decision diamonds or, only in a forced external PlantUML compatibility path, to nested `if` / `else` / `endif`.
-- Confirm every branch label is business text in `connector.captions`, not pseudo-code.
+Follow `../../references/workflow.md` with `PlantUML_mode: false`. Native flowchart primitives:
+
+- `composite_shape` `stadium` → start/end
+- `composite_shape` `round_rect` → process step
+- `composite_shape` `diamond` → decision
+- `connector` with `from`/`to` node ids → flow arrow
+- Branch labels on `connector.captions`
+
+Pre-write: scan all generated text for `elseif` / `else if`. Either token → rewrite as nested native diamonds before writing.
+
+## Forbidden mixing
+
+- Swimlane responsibility partitions → `lark-uml:swimlane`.
+- Sequence messages / lifelines → `lark-uml:sequence`.
+- Use case ovals → `lark-uml:usecase`.
+- Network devices → `lark-uml:network`.
