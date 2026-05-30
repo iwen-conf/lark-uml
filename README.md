@@ -2,7 +2,7 @@
 
 Feishu Whiteboard 原生操作 Agent for UML-style diagrams.
 
-This plugin is intentionally strict: it modifies Feishu / Lark whiteboard templates through native `lark-cli whiteboard` raw nodes and native connectors. It must not draw by Mermaid, PlantUML, SVG, Graphviz, draw.io, screenshots, or any converted diagram source. The agent reads the board, edits the existing native template in place, and writes the board back.
+This plugin is intentionally strict: it modifies Feishu / Lark whiteboard templates through `lark-cli whiteboard`. The **primary route is PlantUML** via `whiteboard +update --input_format plantuml --overwrite`, which the Feishu parser converts to editable native nodes. For precise in-place edits on boards with existing native `combined_fragment` nodes, the **secondary route** is raw native JSON editing via `+query --output_as raw` → `+update --input_format raw`. It must not draw by SVG, Graphviz, draw.io, or screenshots. Mermaid via inline `<whiteboard type="mermaid">` is less reliable than PlantUML and should be avoided.
 
 Feishu / Lark whiteboard UML and native Slides skills, packaged as a Claude Code plugin. Diagram skills drive the [`lark-whiteboard`](https://github.com/larksuite) tooling via `lark-cli` so the agent reads native raw, edits native nodes / connectors, and writes raw back itself. The Slides skill drives `lark-cli slides` / Slides OpenAPI so the agent creates or edits a cloud presentation directly. The deliverable is an editable Feishu artifact, not Mermaid / PlantUML / SVG / PPTX / HTML handed back to the user. Generating a PPTX with `python-pptx` or Office tooling and importing it into Feishu is forbidden, not a fallback.
 
@@ -10,13 +10,13 @@ Feishu / Lark whiteboard UML and native Slides skills, packaged as a Claude Code
 
 All diagram skills inherit [`references/native-agent.md`](references/native-agent.md):
 
-- Use `lark-cli whiteboard +query --output_as raw` before editing.
-- Modify the current template in place by renaming, moving, reconnecting, regrouping, splitting, merging, adding, or deleting native elements.
-- Duplicate existing same-kind template nodes / connectors when new elements are needed.
-- Preserve visual vocabulary and useful node ids instead of redrawing the whole board.
-- Write back only through `lark-cli whiteboard +update --input_format raw`.
+- **Primary:** Use `lark-cli whiteboard +update --input_format plantuml --overwrite` for creation and rewrites.
+- **Secondary:** For in-place raw native edits, use `lark-cli whiteboard +query --output_as raw` before editing, modify the template in place, write back through `lark-cli whiteboard +update --input_format raw`.
+- Always prefer duplicating existing template nodes over inventing new ones.
+- Preserve visual vocabulary and useful node ids instead of redrawing.
 - Verify business connectors are native `type: "connector"` nodes with `connector.from` / `connector.to` bound to existing node ids.
-- Treat Mermaid / PlantUML / SVG / DOT / draw.io / screenshot conversion as a failure path, including private sketches.
+- Treat SVG / Graphviz / DOT / draw.io / screenshot conversion as a failure path.
+- Mermaid via `<whiteboard type="mermaid">` is allowed only as a last resort — PlantUML is more reliable.
 
 ## Skills
 
@@ -46,9 +46,10 @@ Coordinate endpoints are allowed only for annotation, decoration, measurement, a
 
 1. The user gives a whiteboard URL / token and an optional change request.
 2. The matching skill loads its diagram-specific quality rules.
-3. Diagram skills delegate the actual raw read / write to `lark-whiteboard` (`lark-cli whiteboard +query --output_as raw` / `+update --input_format raw`).
-4. The Slides skill delegates presentation creation / editing to `lark-cli slides` (`+create`, `+replace-slide`, or `xml_presentation.slide.*`), falling back to official OpenAPI only when needed.
-5. Output is the updated Feishu artifact, not a code blob.
+3. **Default route:** PlantUML source is piped to `lark-cli whiteboard +update --input_format plantuml --overwrite`. The Feishu parser generates editable native nodes.
+4. **Advanced route:** `lark-cli whiteboard +query --output_as raw` → in-memory edit → `+update --input_format raw` for precise native tweaks.
+5. The Slides skill delegates presentation creation / editing to `lark-cli slides`.
+6. Output is the updated Feishu artifact, not a code blob.
 
 `lark-cli` must be installed and authenticated. See the [`lark-whiteboard`](https://github.com/larksuite) and [`lark-shared`](https://github.com/larksuite) skills.
 
