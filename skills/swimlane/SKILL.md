@@ -47,7 +47,7 @@ Build the swimlane out of these native whiteboard primitives. Do not express any
 - **Action** — native rectangle, placed entirely inside one lane. Every action belongs to exactly one lane; never straddle a boundary.
 - **Decision** — native diamond inside the lane that owns the decision. One incoming connector, two or more outgoing connectors, each labeled in business Chinese.
 - **Start / End** — native stadium / circle shape inside the lane where the flow begins or terminates.
-- **Cross-lane connector** — native `type: "connector"` with `connector.from` / `connector.to` bound to node ids in different lanes. Anchors must reflect lane geometry (e.g., right anchor of source lane → left anchor of target lane). Label the connector with the trigger when the handoff is not obvious.
-- **Failure / re-entry connector** — same native connector primitive, with a Chinese label like `失败回流` / `驳回返工`. Endpoints must still bind to real node ids; never leave a dangling tail.
+- **Cross-lane connector** — native `type: "connector"` with `connector.from` / `connector.to` bound to node ids in different lanes, target end `arrow_style: "zero_or_single_arrow"`, source end omit `arrow_style`. Anchors must reflect lane geometry (e.g., right anchor of source lane → left anchor of target lane). Label the connector with the trigger when the handoff is not obvious.
+- **Failure / re-entry connector** — same native connector primitive, target end `arrow_style: "zero_or_single_arrow"`, source end omit `arrow_style`. Chinese label like `失败回流` / `驳回返工`. Endpoints must still bind to real node ids; never leave a dangling tail.
 
 New lanes, nodes, and connectors are produced by duplicating the closest existing same-kind element and adapting it.

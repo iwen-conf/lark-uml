@@ -49,8 +49,8 @@ Build the use case diagram out of these native whiteboard primitives. Do not exp
 - **System boundary** — native rectangle with the system name in the header. All use case ovals sit inside it.
 - **Actor** — native stick-figure (or rectangle labeled with the actor name if the template uses that style). All actors sit outside the boundary, lined up on the left and / or right side.
 - **Use case** — native oval / ellipse inside the boundary, labeled with a verb-phrase use case name in business Chinese.
-- **Association connector** — native `type: "connector"`, straight line, no arrowhead or open arrowhead, from actor id to use case id. Uniform style across all actor → use case lines.
-- **Include / extend connector** — native connector, dashed line with open arrow, `connector.label` of `«include»` / `«extend»` (or whichever marker the template already uses).
-- **Generalization connector** — native connector, solid line, hollow triangle arrowhead, from specific to general actor / use case.
+- **Association connector** — native `type: "connector"`, straight line, omit `arrow_style` on both ends (or `"zero_or_single_arrow"` on the use case end if directed), from actor id to use case id. Uniform style across all actor → use case lines.
+- **Include / extend connector** — native connector, dashed line, `arrow_style: "zero_or_single_arrow"` on the target use case end, omit `arrow_style` on the source end. `connector.captions` label of `«include»` / `«extend»` (or whichever marker the template already uses).
+- **Generalization connector** — native connector, solid line, `arrow_style: "zero_or_single_arrow"` on the general end (hollow-triangle UML end decoration supplements), omit `arrow_style` on the specific end. From specific to general actor / use case.
 
 When adding actors or use cases, clone the closest existing one and adjust label, position, and connector bindings. Multiple lines from a single actor should fan out from one side, not surround the actor on four sides.

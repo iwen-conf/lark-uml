@@ -52,6 +52,6 @@ Build the architecture diagram out of these native whiteboard primitives. Do not
 - **External system** — native rectangle with a visually distinct outline (e.g., dashed border) supplied by the template.
 - **Storage** — native cylinder, or a rectangle whose label clearly says `DB` / `Cache` / `Queue` / `Object Store`, matching whichever style the template already uses.
 - **Edge / gateway** — native trapezoid, or rectangle labeled `网关` / `Gateway`, matching the template.
-- **Connector** — native `type: "connector"` whose `connector.from` / `connector.to` reference real node ids. Label the connector with the protocol or data direction (`HTTP`, `gRPC`, `Kafka`, `读` / `写`, `事件`). Sync / async distinction may use line style (solid / dashed) but must stay consistent.
+- **Connector** — native `type: "connector"` whose `connector.from` / `connector.to` reference real node ids, target end `arrow_style: "zero_or_single_arrow"`, source end omit `arrow_style`. Label the connector with the protocol or data direction (`HTTP`, `gRPC`, `Kafka`, `读` / `写`, `事件`). Sync / async distinction may use line style (solid / dashed) but must stay consistent.
 
 When the template is missing a kind of element, duplicate the closest existing element and adapt it. Do not introduce a foreign visual vocabulary.

@@ -55,6 +55,6 @@ Build the network topology out of these native whiteboard primitives. Do not exp
 - **Switch / load balancer** — native rectangle with `SW` / `LB` label.
 - **Host / VM / container** — native rectangle with `Host` / `VM` / `Pod` label.
 - **Service endpoint** — native rectangle named after the service.
-- **Link connector** — native `type: "connector"` whose `connector.from` / `connector.to` bind to two device node ids. Undirected for symmetric connectivity; arrowhead only when the constraint is asymmetric (NAT, allowed direction). Label only with network-layer facts (`TCP/443`, `VLAN 10`, peering name) — never with business-layer call descriptions.
+- **Link connector** — native `type: "connector"` whose `connector.from` / `connector.to` bind to two device node ids. Symmetric connectivity: omit `arrow_style` on both ends. Asymmetric constraint (NAT, allowed direction): `arrow_style: "zero_or_single_arrow"` on the direction end, omit `arrow_style` on the other. Label only with network-layer facts (`TCP/443`, `VLAN 10`, peering name) — never with business-layer call descriptions.
 
 When extending, duplicate the closest existing zone, device, or link and adapt it.

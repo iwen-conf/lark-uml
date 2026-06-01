@@ -19,7 +19,7 @@ This skill is **not** a software-design class diagram. For business objects with
 
 Follow [`../../references/workflow.md`](../../references/workflow.md) end to end. Stay inside the boundaries in [`../../references/boundaries.md`](../../references/boundaries.md). Apply the language rules in [`../../references/language.md`](../../references/language.md). Apply the native connector rules in [`../../references/connectors.md`](../../references/connectors.md).
 
-**Execution route:** raw-first, native-only. Read the board as raw, edit native entity / table shapes and native connectors in place, then write raw back. Foreign-key, cardinality, and table / field relationships are business relationships, so endpoints must bind to the relevant entity or row node ids. **No PlantUML / Mermaid / SVG anywhere in the loop, not even as a private sketch.**
+**Execution route:** raw-first, native-only. Read the board as raw, edit native entity / table shapes and native connectors in place, then write raw back. Foreign-key, cardinality, and table / field relationships are business relationships expressed as native `connector` nodes with explicit `arrow_style` — cardinality is rendered by the arrow shape itself, not by text labels on the line. **No PlantUML / Mermaid / SVG anywhere in the loop, not even as a private sketch.** Any shared reference defaulting to PlantUML is overridden for this skill.
 
 **Default mode is modify-in-place.** Duplicate and adapt the template's existing entity tables, field rows, and relationship connectors. Only redraw when the user explicitly asks, or the diagram is the wrong type entirely.
 
@@ -28,7 +28,7 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) end to end
 - **Entities are tables.** Every entity is a header-rectangle: the table name in the header row, fields stacked underneath. Same-style headers across all entities; same-style rows across all entities; identical column widths within one entity.
 - **Field columns.** Each field row shows, in order: field name, type, constraint markers. Constraint markers use the standard set: `PK` (primary key), `FK` (foreign key), `NN` (not null), `UQ` (unique), `IDX` (indexed). One marker per role, no ad-hoc abbreviations.
 - **Primary and foreign keys.** Always mark them. A foreign key row must visually point at the referenced primary key — bind the relationship line endpoints to the actual `PK` / `FK` rows, not just to the entity header.
-- **Cardinality.** Every relationship line carries cardinality on both ends, written in crow-foot or `1..1` / `1..*` / `0..*` / `0..1` form. Pick one notation per diagram and keep it consistent.
+- **Cardinality.** Every relationship line carries cardinality on both ends via the native `arrow_style` on each connector end. `"zero_or_single_arrow"` means "one", `"zero_or_multi_arrow"` means "many". The arrow shape **is** the notation — no text labels on the line.
 - **Many-to-many.** Always materialize the junction table. Do not draw a single `*..*` line. The junction shows up as its own entity with foreign keys back to both sides.
 - **Referential integrity.** Annotate `ON DELETE` / `ON UPDATE` behavior only when it carries meaning (cascade / restrict). Never invent it.
 - **Storage-only.** This diagram captures **storage** structure. No class methods, no Service / Controller objects, no business orchestration. Field-level domain logic stays in `lark-uml:class`.
@@ -50,7 +50,19 @@ Build the ER diagram out of these native whiteboard primitives. Do not express a
 - **Entity** — native rectangle with a header row (table name + optional Chinese display name) and one stacked row per field. New entities are produced by duplicating an existing entity and editing the header and rows.
 - **Field row** — native sub-rectangle / table-row element inside the entity, with columns `字段名 | 类型 | 约束`. Constraint markers come from the fixed set `PK`, `FK`, `NN`, `UQ`, `IDX`.
 - **PK / FK rows** — same field-row primitive, marked with `PK` or `FK`. Foreign-key rows are the actual endpoints relationship lines bind to (not just the entity header).
-- **Relationship connector** — native `type: "connector"`, with `connector.from` bound to the FK row id on the child side and `connector.to` bound to the PK row id on the parent side. Cardinality is shown via the connector's end style (crow-foot or `1..1` / `1..*` / `0..*` / `0..1` labels) — keep one notation per board.
+- **Relationship connector** — native `type: "connector"`, `shape: "straight"`, `turning_points: []`. `connector.from` binds to the FK row id on the child side; `connector.to` binds to the PK row id on the parent side. Cardinality is expressed **exclusively through native arrow styles** on the connector ends, not through text labels on the line. The two arrow styles map directly to crow's-foot notation:
+
+  | Cardinality | `arrow_style` | Crow's-foot |
+  |---|---|---|
+  | `1` (one) | `"zero_or_single_arrow"` | Single line (`\|`) |
+  | `*` (many) | `"zero_or_multi_arrow"` | Crow's foot (`}\|`) |
+
+  Relationship ends combine independently. Examples:
+  - `1..1` — both ends `zero_or_single_arrow`
+  - `1..*` — FK (child) side `zero_or_multi_arrow`, PK (parent) side `zero_or_single_arrow`
+  - `0..*` — FK side `zero_or_multi_arrow`, PK side `zero_or_single_arrow`
+
+  The native arrow shape **is** the cardinality notation. Never substitute with text labels (`1..*`, `0..1`) on the line or in captions — if you need both arrow and label, the arrow alone is sufficient and correct. Keep `arrow_style` consistent across all connectors on the same board.
 - **Junction entity** — for many-to-many, materialize a native entity in its own right with two FK rows; never substitute a single `*..*` line.
 
 When you add a field, clone an existing field row from the same or an adjacent entity to preserve column widths and text style.

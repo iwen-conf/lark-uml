@@ -97,7 +97,7 @@ Follow `../../references/workflow.md` with `PlantUML_mode: false`. Native flowch
 - `composite_shape` `stadium` → start/end
 - `composite_shape` `round_rect` → process step
 - `composite_shape` `diamond` → decision
-- `connector` with `from`/`to` node ids → flow arrow
+- `connector` with `from`/`to` node ids → flow arrow, target end `arrow_style: "zero_or_single_arrow"`, source end omit `arrow_style`
 - Branch labels on `connector.captions`
 
 Pre-write: scan all generated text for `elseif` / `else if`. Either token → rewrite as nested native diamonds before writing.

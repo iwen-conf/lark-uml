@@ -162,7 +162,7 @@ Follow [`../../references/workflow.md`](../../references/workflow.md) with `Plan
 | Participant header | participant head / `life_line` |
 | Lifeline | `life_line` |
 | Activation bar | narrow `life_line` or `activation` node |
-| Message arrow | `connector` with `from`/`to` bound to node ids |
+| Message arrow | `connector` with `from`/`to` bound to node ids, target end `arrow_style: "zero_or_single_arrow"`, source end omit `arrow_style` |
 | `alt`/`opt`/`loop` frame | `combined_fragment` |
 | Note / annotation | `note_shape` or `text_shape` |
 

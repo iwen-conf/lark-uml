@@ -172,11 +172,11 @@ Build the class diagram out of these native whiteboard primitives. Do not expres
 - **Class box** — native rectangle, divided into three stacked regions (class name on top, attributes in the middle, methods at the bottom). The board's existing class boxes already use a specific structure; clone one and overwrite its text rather than building a new shape.
 - **Interface / abstract class box** — same native rectangle layout, with a `«interface»` or `«abstract»` stereotype on the name row (or whatever marker the template already uses).
 - **Visibility markers** — keep `+` / `-` / `#` / `~` in front of each member.
-- **Inheritance connector** — native `type: "connector"`, hollow-triangle arrow head, solid line, from child class id to parent class id.
-- **Realization connector** — native connector, hollow-triangle arrow head, dashed line, from implementer id to interface id.
-- **Association connector** — native connector, solid line, optional role / multiplicity labels on both ends.
-- **Aggregation connector** — native connector, solid line, hollow diamond on the whole-class side.
-- **Composition connector** — native connector, solid line, filled diamond on the whole-class side.
-- **Dependency connector** — native connector, dashed line, open arrow head; use this for `manage` / `审核` / `分配` style control relationships and for transient usage dependencies.
+- **Inheritance connector** — native `type: "connector"`, solid line, `arrow_style: "zero_or_single_arrow"` on the parent end (hollow-triangle UML end decoration supplements the arrow), from child class id to parent class id. Source end: omit `arrow_style`.
+- **Realization connector** — native connector, dashed line, `arrow_style: "zero_or_single_arrow"` on the interface end (hollow-triangle decoration supplements), from implementer id to interface id. Source end: omit `arrow_style`.
+- **Association connector** — native connector, solid line, `arrow_style: "zero_or_single_arrow"` on the direction end if directed, otherwise omit `arrow_style` on both ends. Role / multiplicity labels on both ends.
+- **Aggregation connector** — native connector, solid line, omit `arrow_style` on both ends (hollow-diamond UML end decoration on the whole-class side).
+- **Composition connector** — native connector, solid line, omit `arrow_style` on both ends (filled-diamond UML end decoration on the whole-class side).
+- **Dependency connector** — native connector, dashed line, `arrow_style: "zero_or_single_arrow"` on the supplier end, omit `arrow_style` on the dependent end. Use this for `manage` / `审核` / `分配` style control relationships and for transient usage dependencies.
 
 For every relationship connector, `connector.from` and `connector.to` must be ids of real class / interface boxes that survive the edit. Clone the closest existing connector with the right arrow style before adjusting endpoints.

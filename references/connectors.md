@@ -53,14 +53,70 @@ These marks are not primary diagram relationships and must not replace a real no
 - A business relationship connector with `waypoints` must still use string node ids for both `connector.from` and `connector.to`.
 - Prefer the whiteboard's automatic routing first. Use manual waypoints only when routing must be constrained after endpoint binding is already correct.
 
+## ER cardinality via arrow styles
+
+For `lark-uml:er`, cardinality is expressed through the native `arrow_style` on each connector end — the arrow shape **is** the notation. Text labels on the line are not a substitute.
+
+| Cardinality | `arrow_style` |
+|---|---|
+| `1` (one) | `"zero_or_single_arrow"` |
+| `*` (many) | `"zero_or_multi_arrow"` |
+
+- `connector.shape` must be `"straight"` for direct FK relationships; use `"polyline"` only when routing around other entities is unavoidable.
+- `turning_points` must be `[]` for straight connectors.
+- Every FK relationship gets one connector. The FK (child) row id is `connector.from`; the PK (parent) row id is `connector.to`.
+- Many-to-many is materialized as a junction `table_uml` with two FK connectors — never a single connector with `*` on both ends.
+
+## Per-skill arrow_style enforcement
+
+Every `lark-uml:*` skill MUST set `arrow_style` correctly on every business connector end. The native whiteboard has **exactly two** `arrow_style` values, and the field lives at a **fixed path** inside the connector node:
+
+```
+connector.start.arrow_style    ← arrow on the source end (sibling of attached_object)
+connector.end.arrow_style      ← arrow on the target end (sibling of attached_object)
+```
+
+`arrow_style` does **not** appear on `connector.start_object` or `connector.end_object` — those carry only the target node `id`, `position`, and `snap_to`.
+
+| `arrow_style` | Shape | Meaning |
+|---|---|---|
+| `"zero_or_single_arrow"` | Single arrowhead (`→`) | One-side, flow direction, call, dependency, message |
+| `"zero_or_multi_arrow"` | Multi-prong / crow's foot (`⇒`) | Many-side of ER cardinality only |
+
+For an end with **no arrow**, omit the `arrow_style` field entirely — do NOT set it to `"none"` or any other made-up value.
+
+Per-skill requirements:
+
+| Skill | Connector type | `arrow_style` |
+|---|---|---|
+| `lark-uml:er` | FK relationship | FK child side: `"zero_or_multi_arrow"` (many) or `"zero_or_single_arrow"` (one); PK parent side: `"zero_or_single_arrow"` |
+| `lark-uml:class` | Inheritance / Realization | Child→Parent end: `"zero_or_single_arrow"` (UML triangle decoration supplements, not replaces) |
+| `lark-uml:class` | Association / Dependency | Direction end: `"zero_or_single_arrow"`; undirected end: omit `arrow_style` |
+| `lark-uml:class` | Aggregation / Composition | Whole-side: omit `arrow_style` (diamond decoration on this end); part-side: omit `arrow_style` |
+| `lark-uml:usecase` | Actor↔UseCase association | Both ends: omit `arrow_style` or direction end: `"zero_or_single_arrow"` |
+| `lark-uml:usecase` | Include / Extend | Arrow end: `"zero_or_single_arrow"`; other end: omit `arrow_style` |
+| `lark-uml:usecase` | Generalization | Specific→General end: `"zero_or_single_arrow"` (UML triangle decoration supplements) |
+| `lark-uml:flowchart` | Flow edge | Target end: `"zero_or_single_arrow"`; source end: omit `arrow_style` |
+| `lark-uml:swimlane` | Cross-lane handoff, branch | Target end: `"zero_or_single_arrow"`; source end: omit `arrow_style` |
+| `lark-uml:sequence` | Forward message (solid) | Target end: `"zero_or_single_arrow"`; source end: omit `arrow_style` |
+| `lark-uml:sequence` | Return message (dashed) | Target end: `"zero_or_single_arrow"` (open style); source end: omit `arrow_style` |
+| `lark-uml:architecture` | Call / Data flow | Target end: `"zero_or_single_arrow"`; source end: omit `arrow_style` |
+| `lark-uml:network` | Symmetric link | Both ends: omit `arrow_style` |
+| `lark-uml:network` | Asymmetric / NAT / directed | Direction end: `"zero_or_single_arrow"`; other end: omit `arrow_style` |
+
+These are correctness gates. A connector whose `arrow_style` does not match the table above is invalid — fix it before writing.
+
 ## Pre-write validation
 
 Before `+update --input_format raw`, validate the edited raw structure:
 
 - Every business relationship is a native `connector`.
-- Every business `connector.from` and `connector.to` is a string node id.
+- Every business `connector.start.attached_object.id` and `connector.end.attached_object.id` is a string node id.
 - Every referenced id exists in the final `nodes` set.
 - No business relationship endpoint is a coordinate object.
+- Every business connector end with an arrow has `connector.start.arrow_style` / `connector.end.arrow_style` set to `"zero_or_single_arrow"` or `"zero_or_multi_arrow"` per the per-skill table above.
+- No `connector.start_object` or `connector.end_object` carries `arrow_style` — it belongs on `connector.start` / `connector.end` only.
+- No `arrow_style` is set to `"none"` or any made-up value — omit the field when no arrow is needed.
 - No business relationship was converted into a decorative line, path, SVG, image, Mermaid output, PlantUML output, or other unverifiable shape.
 - No connector only "looks connected" by sitting against a node edge while remaining structurally unbound.
 
