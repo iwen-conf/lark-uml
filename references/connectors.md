@@ -69,7 +69,7 @@ For `lark-uml:er`, cardinality is expressed through the native `arrow_style` on 
 
 ## Per-skill arrow_style enforcement
 
-Every `lark-uml:*` skill MUST set `arrow_style` correctly on every business connector end. The native whiteboard has **exactly two** `arrow_style` values, and the field lives at a **fixed path** inside the connector node:
+Every `lark-uml:*` skill MUST set `arrow_style` correctly on every business connector end. The field lives at a **fixed path** inside the connector node:
 
 ```
 connector.start.arrow_style    ← arrow on the source end (sibling of attached_object)
@@ -82,17 +82,23 @@ connector.end.arrow_style      ← arrow on the target end (sibling of attached_
 |---|---|---|
 | `"zero_or_single_arrow"` | Single arrowhead (`→`) | One-side, flow direction, call, dependency, message |
 | `"zero_or_multi_arrow"` | Multi-prong / crow's foot (`⇒`) | Many-side of ER cardinality only |
+| `"line_arrow"` | Open arrowhead (`→`) | Class one-way association / dependency in the Feishu UML standard |
+| `"empty_triangle_arrow"` | Hollow triangle | Class inheritance / realization in the Feishu UML standard |
+| `"diamond_arrow"` | Filled diamond | Class composition whole-side in the Feishu UML standard |
+| `"empty_diamond_arrow"` | Hollow diamond | Class aggregation whole-side in the Feishu UML standard |
 
-For an end with **no arrow**, omit the `arrow_style` field entirely — do NOT set it to `"none"` or any other made-up value.
+For an end with **no arrow**, clone the board's existing native representation. Most bound business connectors omit the `arrow_style` field on the no-arrow end. Some legend / template exports use `"none"` for coordinate-only example strokes; preserve that only when cloning that same board style, and do not use it to replace a semantic arrow.
 
 Per-skill requirements:
 
 | Skill | Connector type | `arrow_style` |
 |---|---|---|
 | `lark-uml:er` | FK relationship | FK child side: `"zero_or_multi_arrow"` (many) or `"zero_or_single_arrow"` (one); PK parent side: `"zero_or_single_arrow"` |
-| `lark-uml:class` | Inheritance / Realization | Child→Parent end: `"zero_or_single_arrow"` (UML triangle decoration supplements, not replaces) |
-| `lark-uml:class` | Association / Dependency | Direction end: `"zero_or_single_arrow"`; undirected end: omit `arrow_style` |
-| `lark-uml:class` | Aggregation / Composition | Whole-side: omit `arrow_style` (diamond decoration on this end); part-side: omit `arrow_style` |
+| `lark-uml:class` | Inheritance / Realization | Parent / interface end: `"empty_triangle_arrow"` |
+| `lark-uml:class` | One-way association / Dependency | Direction / supplier end: `"line_arrow"` |
+| `lark-uml:class` | Plain association | Both ends: no arrow |
+| `lark-uml:class` | Aggregation | Whole-side: `"empty_diamond_arrow"`; part-side: no arrow |
+| `lark-uml:class` | Composition | Whole-side: `"diamond_arrow"`; part-side: no arrow |
 | `lark-uml:usecase` | Actor↔UseCase association | Both ends: omit `arrow_style` or direction end: `"zero_or_single_arrow"` |
 | `lark-uml:usecase` | Include / Extend | Arrow end: `"zero_or_single_arrow"`; other end: omit `arrow_style` |
 | `lark-uml:usecase` | Generalization | Specific→General end: `"zero_or_single_arrow"` (UML triangle decoration supplements) |
@@ -106,6 +112,14 @@ Per-skill requirements:
 
 These are correctness gates. A connector whose `arrow_style` does not match the table above is invalid — fix it before writing.
 
+For `lark-uml:class`, this is a hard separation from ER / flowchart notation:
+
+- Class inheritance / realization MUST NOT use `"zero_or_single_arrow"`; use `"empty_triangle_arrow"`.
+- Class one-way association / dependency MUST NOT use `"zero_or_single_arrow"`; use `"line_arrow"`.
+- Class aggregation / composition MUST NOT omit the whole-side diamond; use `"empty_diamond_arrow"` / `"diamond_arrow"`.
+- `"zero_or_multi_arrow"` is never valid in a class diagram. It is ER-only.
+- A coordinate-only connector may appear in a relationship legend, but it MUST NOT be used for an actual class-to-class relationship.
+
 ## Pre-write validation
 
 Before `+update --input_format raw`, validate the edited raw structure:
@@ -114,9 +128,9 @@ Before `+update --input_format raw`, validate the edited raw structure:
 - Every business `connector.start.attached_object.id` and `connector.end.attached_object.id` is a string node id.
 - Every referenced id exists in the final `nodes` set.
 - No business relationship endpoint is a coordinate object.
-- Every business connector end with an arrow has `connector.start.arrow_style` / `connector.end.arrow_style` set to `"zero_or_single_arrow"` or `"zero_or_multi_arrow"` per the per-skill table above.
+- Every business connector end with an arrow has `connector.start.arrow_style` / `connector.end.arrow_style` set to one of the allowed values for that skill per the table above.
 - No `connector.start_object` or `connector.end_object` carries `arrow_style` — it belongs on `connector.start` / `connector.end` only.
-- No `arrow_style` is set to `"none"` or any made-up value — omit the field when no arrow is needed.
+- No semantic arrow is replaced by `"none"` or any made-up value. Use `"none"` only when preserving a board's existing no-arrow legend/template stroke; otherwise omit the field when no arrow is needed.
 - No business relationship was converted into a decorative line, path, SVG, image, Mermaid output, PlantUML output, or other unverifiable shape.
 - No connector only "looks connected" by sitting against a node edge while remaining structurally unbound.
 
@@ -130,4 +144,3 @@ After writing raw:
 2. Re-check the key business relationships as `node id -> node id`.
 3. Query an image preview only after the structural checks pass.
 4. Apply the drag semantics check: if moving either endpoint node would not theoretically keep the connector attached, the structure is invalid and must be corrected.
-
