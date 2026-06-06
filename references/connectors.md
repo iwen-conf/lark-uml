@@ -97,8 +97,8 @@ Per-skill requirements:
 |---|---|---|
 | `lark-uml:er` | FK relationship | FK child side: `"zero_or_multi_arrow"` (many) or `"zero_or_single_arrow"` (one); PK parent side: `"zero_or_single_arrow"` |
 | `lark-uml:class` | Inheritance / Realization | Parent / interface end: `"empty_triangle_arrow"` |
-| `lark-uml:class` | One-way association / Dependency | Direction / supplier end: `"line_arrow"` |
-| `lark-uml:class` | Plain association | Both ends: no arrow |
+| `lark-uml:class` | Default / one-way association, Dependency | Direction / supplier / target end: `"line_arrow"` |
+| `lark-uml:class` | Explicit bidirectional / symmetric association | Both ends: no arrow |
 | `lark-uml:class` | Aggregation | Whole-side: `"empty_diamond_arrow"`; part-side: no arrow |
 | `lark-uml:class` | Composition | Whole-side: `"diamond_arrow"`; part-side: no arrow |
 | `lark-uml:usecase` | Actor↔UseCase association | Both ends: omit `arrow_style` or direction end: `"zero_or_single_arrow"` |
@@ -117,7 +117,8 @@ These are correctness gates. A connector whose `arrow_style` does not match the 
 For `lark-uml:class`, this is a hard separation from ER / flowchart notation:
 
 - Class inheritance / realization MUST NOT use `"zero_or_single_arrow"`; use `"empty_triangle_arrow"`.
-- Class one-way association / dependency MUST NOT use `"zero_or_single_arrow"`; use `"line_arrow"`.
+- Class default / one-way association and dependency MUST NOT use `"zero_or_single_arrow"`; use `"line_arrow"`.
+- In teacher-reference / course-paper system class diagrams, a normal association is treated as directed by default and MUST show a `line_arrow` on the target end. Use no-arrow on both ends only when the association is explicitly bidirectional / symmetric or when preserving an existing template's deliberate bare association style.
 - Class aggregation / composition MUST NOT omit the whole-side diamond; use `"empty_diamond_arrow"` / `"diamond_arrow"`.
 - `"zero_or_multi_arrow"` is never valid in a class diagram. It is ER-only.
 - A coordinate-only connector may appear in a relationship legend, but it MUST NOT be used for an actual class-to-class relationship.

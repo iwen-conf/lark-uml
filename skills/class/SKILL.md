@@ -2,7 +2,7 @@
 name: lark-uml:class
 description: >
   飞书画板系统主要类图：执行型 Skill。当用户要在飞书画板上绘制或修改"系统主要类图"（OOAD 业务对象、属性 / 参数、主要方法、继承 / 实现 / 关联 / 依赖 / 聚合 / 组合关系）时使用。
-  必须使用飞书原生 table_uml 类框和 connector 关系线：属性行按 `- name: Type`，主要方法按 `+ method(): ReturnType`，关系箭头按飞书类图标准（empty_triangle_arrow / line_arrow / diamond_arrow / empty_diamond_arrow）。
+  必须使用飞书原生 table_uml 类框和 connector 关系线：属性行按 `-name: Type` 或模板既有的 `- name: Type`，主要方法按 `+method(): ReturnType` 或模板既有格式；普通关联默认用带箭头的 `line_arrow`，端点附近标 `1` / `0..*` 等多重性。
   本图不是 Java / Go / Python 源码图，也不是数据库表结构；严格区分 lark-uml:er，直接改写白板，不输出 PlantUML / Mermaid / SVG。
 ---
 
@@ -20,10 +20,10 @@ This is the single most common drift, so spell it out before drawing anything:
 
 | Aspect | `lark-uml:class` (this skill) | `lark-uml:er` |
 | --- | --- | --- |
-| What it models | Business objects, behaviors, responsibilities | Storage tables, columns, constraints |
-| Members | OO attributes + key business methods (`- field: Type` / `+ method(): ReturnType`) | Field name + DB type + `PK` / `FK` / `NN` markers |
+| What it models | Business objects, responsibilities, and course-paper entity classes | Storage tables, columns, constraints |
+| Members | OO attributes + optional key business methods (`-field: Type` / `+method(): ReturnType`) | Field name + DB type + `PK` / `FK` / `NN` markers |
 | Relationships | Inheritance, realization, association, aggregation, composition, dependency | Foreign-key references with crow-foot cardinality |
-| Multiplicity notation | `1`, `N`, `M`, `N:M`, `0..1`, `1..*`, `0..*` | `1:1`, `1:N`, `N:M` crow-foot |
+| Multiplicity notation | Visible endpoint text such as `1`, `0..1`, `1..*`, `0..*` | `1:1`, `1:N`, `N:M` crow-foot |
 | What it survives | Storage swap, ORM swap, language swap | Only the current schema |
 | Audience | Architects, OO designers, paper readers | DBAs, ORM authors, migration writers |
 
@@ -51,10 +51,11 @@ Before drawing, editing, or writing, apply these gates. If any gate fails, **do 
 
 - **MUST use native nodes.** Every class / interface / abstract class MUST be one `table_uml` node. Every business relationship MUST be one native `connector`.
 - **MUST NOT fake class boxes.** Three stacked rectangles, grouped shapes, free text, SVG, Mermaid, PlantUML, images, or geometric lines that only look like UML are invalid.
-- **MUST use Feishu member notation.** Attribute / parameter rows MUST use `- name: Type`; main method rows MUST use `+ method(): ReturnType`.
+- **MUST use Feishu member notation.** Attribute / parameter rows MUST use `-name: Type` or the existing template's `- name: Type`; main method rows, when present, MUST use `+method(): ReturnType` or the existing template's `+ method(): ReturnType`.
 - **MUST NOT use the old member format.** Rows such as `+Long userId`, `+login()`, DB column definitions, annotations, tags, source-language signatures, or framework decorators are invalid.
-- **MUST select methods.** Include only the most important business methods. Simple classes MAY have no method rows, but MUST NOT be padded with getters, setters, trivial CRUD wrappers, one-line helpers, or framework hooks.
-- **MUST use the class arrow standard.** Class relationships MUST use `empty_triangle_arrow`, `line_arrow`, `diamond_arrow`, or `empty_diamond_arrow` exactly as defined below. `zero_or_single_arrow` and `zero_or_multi_arrow` are invalid for class relationships.
+- **MUST NOT pad methods.** Include methods only when they are important business behaviors or when the existing template already has a method region. Reference-style entity class diagrams MAY omit method rows entirely; do not add getters, setters, trivial CRUD wrappers, one-line helpers, or framework hooks just to fill the box.
+- **MUST use the class arrow standard.** Class relationships MUST use `empty_triangle_arrow`, `line_arrow`, `diamond_arrow`, or `empty_diamond_arrow` exactly as defined below. In the teacher-reference / course-paper style, ordinary associations default to a visible open arrow (`line_arrow`) on the target end. `zero_or_single_arrow` and `zero_or_multi_arrow` are invalid for class relationships.
+- **MUST show endpoint multiplicity.** Associations, aggregations, and compositions MUST show multiplicity text near both line endpoints whenever the count can be inferred. For school / graduation diagrams, prefer `1` and `0..*` exactly as in the accepted reference image.
 - **MUST bind relationship endpoints.** Final business connectors MUST bind to surviving class / interface node ids. Coordinate-only endpoints are invalid for relationships and are allowed only inside legends or non-business annotations.
 - **MUST keep class / ER boundaries.** If the requested content is mostly tables, columns, PK / FK, indexes, storage constraints, or DB cardinality, stop and use `lark-uml:er`.
 
@@ -79,6 +80,7 @@ If the system spans multiple modules / repos, scope discovery to what the user a
 - **Merge near-duplicates.** `UserDO`, `UserDTO`, `UserVO`, `UserEntity`, `UserModel` collapse into one business `User` on the design diagram.
 - **Promote relationships, not foreign keys.** A `Course.ownerId` field in code becomes a `1..* — 1` association from `Course` to `User` on the diagram, not a column.
 - **Stateless services still count.** A service class that is a transaction script with no fields can still appear — its responsibilities (the methods) are what the diagram documents.
+- **Course-paper entity diagrams are allowed.** If the target is a graduation / course-design "系统主要类图" and the source project is a CRUD-style information system, it is acceptable to show persistent entity classes with attributes only, matching the source entity names and simple logical types. Still do not show `PK` / `FK` / `NN` markers, SQL DDL types, indexes, or cascade rules; those remain ER-only.
 
 ### Language-agnostic ≠ code-blind
 
@@ -102,15 +104,17 @@ If the codebase is not reachable and the user has not supplied enough business c
 
 ### Class box structure
 
-Every class is a three-region box, top to bottom:
+Every class is a two- or three-region box, top to bottom:
 
-1. **Class name** — capitalized, singular, business-meaningful noun. Examples: `User`, `Admin`, `Course`, `Exam`, `Question`, `Submission`, `Message`.
-2. **Attributes** — business state fields written in the Feishu standard model as private member rows: `<visibility> <name>: <Type>`. Use `-` by default for class attributes, because the reference model marks class parameters / fields with `-`.
-   - Format: `- userId: Long`, `- title: String`, `- status: Integer`, `- startTime: LocalDateTime`, `- enabled: Boolean`, `- score: Double`.
-   - Allowed type vocabulary: `Long`, `Integer`, `String`, `Boolean`, `Double`, `Float`, `LocalDate`, `LocalDateTime`, `BigDecimal`, simple collection wrappers, and project-specific enums. These read as generic OO type hints (Java / Kotlin / C# / TypeScript-style); they are **not** a commitment to Java.
+1. **Class name** — business-meaningful noun. Prefer PascalCase for greenfield OOAD diagrams (`User`, `Admin`, `Course`, `Exam`, `Question`, `Submission`, `Message`), but in teacher-reference / course-paper entity diagrams preserve the project's canonical entity names exactly, including lowercase pinyin names such as `yonghu`, `shangjia`, `cheliangxinxi`, and mixed names such as `User`.
+2. **Attributes** — business state fields written as private member rows: `<visibility><name>: <Type>` in the accepted teacher-reference style, or `<visibility> <name>: <Type>` when preserving a template that already uses a space. Use `-` by default for class attributes.
+   - Preferred school-reference format: `-id: Long`, `-title: String`, `-startTime: DateTime`, `-enabled: Boolean`, `-score: Double`.
+   - Template-preserving format: `- id: Long`, `- title: String`, `- startTime: LocalDateTime`.
+   - Allowed type vocabulary: `Long`, `Integer`, `String`, `Boolean`, `Double`, `Float`, `LocalDate`, `LocalDateTime`, `DateTime`, `Timestamp`, `BigDecimal`, `LongText`, simple collection wrappers, and project-specific enums. These read as generic OO type hints (Java / Kotlin / C# / TypeScript-style); they are **not** a commitment to Java.
    - Never write **storage-layer types** (`VARCHAR(64)`, `BIGINT NOT NULL`, `TEXT`, `DATETIME(3)`), **framework decorators or tags** (`@Column`, `@JsonProperty`, `db:"user_id"`, `binding:"required"`), or **language-specific syntax noise** (`*string` Go pointer, `Optional[T]`, complex generics like `Map<K, List<V>>`).
-3. **Methods** — only the class's main OO business behaviors. Simple accessors, trivial helpers, framework hooks, and obvious CRUD wrappers usually do not belong here.
-   - Format: `+ login(): Boolean`, `+ publish(): void`, `+ submit(): void`, `+ enter(): void`, `+ deleteMessage(): void`.
+3. **Methods** — optional. Include only the class's main OO business behaviors when they matter for the diagram. Simple accessors, trivial helpers, framework hooks, and obvious CRUD wrappers usually do not belong here. If the reference / template uses attribute-only boxes, do not create an empty method region.
+   - Preferred school-reference format: `+login(): Boolean`, `+publish(): void`, `+submit(): void`.
+   - Template-preserving format: `+ login(): Boolean`, `+ publish(): void`.
    - Empty parameter lists are the default. Add parameters only when they are essential to the design meaning. Add a generic return type after `:` when known; use `void` for command-style behavior. Do not write concrete language signatures (`func (s *Service) Place(o *Order) error`, `public Order placeOrder(OrderDTO dto) throws Exception`).
 
 ### Feishu standard class box
@@ -119,15 +123,15 @@ When creating a class box from scratch, reproduce the standard model:
 
 - One `table_uml` node, one column, one row per visible line.
 - Row 1 is the class name: light grey fill, centered, bold, e.g. `DisplayObject`.
-- Attribute rows are white, left-aligned, e.g. `- pos: Point`, `- matrix: Matrix`, `- style: Style`.
-- Method rows are white, left-aligned, e.g. `+ draw(): void`.
+- Attribute rows are white, left-aligned, e.g. `-pos: Point`, `-matrix: Matrix`, `-style: Style` (or preserve existing `- pos: Point` spacing).
+- Method rows are white, left-aligned, e.g. `+draw(): void` (or preserve existing `+ draw(): void` spacing).
 - Clone the existing template's row height, border width, font size, fill colors, and text alignment whenever available. Only fall back to the standard model when no template class box exists.
 
 ### Visibility markers
 
 - `+` public, `-` private, `#` protected, `~` package in UML terms.
 - For this project's Feishu class-diagram standard, `-` is also the required marker for class parameters / fields, and `+` is the required marker for the class's main methods. Treat this as the diagram convention first; use `#` / `~` only when that visibility is design-significant or already used by the board's template.
-- Core business classes should show their main responsibilities as `+` methods. Simple value objects, lightweight records, or classes whose behavior is obvious may omit methods; do not pad them with trivial getters, setters, or one-line helpers.
+- Core business classes should show their main responsibilities as `+` methods when this helps the diagram. Teacher-reference entity diagrams, simple value objects, lightweight records, or classes whose behavior is obvious may omit methods; do not pad them with trivial getters, setters, or one-line helpers.
 
 ### Relationships (UML standard, language-agnostic)
 
@@ -135,7 +139,7 @@ When creating a class box from scratch, reproduce the standard model:
 | --- | --- | --- | --- | --- |
 | Inheritance (generalization) | solid | hollow triangle | `empty_triangle_arrow` on parent end | child → parent |
 | Realization | dashed | hollow triangle | `empty_triangle_arrow` on interface end | implementer → interface |
-| Association | solid | none, or open arrow for one-way association | no-arrow end, or `line_arrow` on direction end | as the business dictates |
+| Association | solid | open arrow by default; no arrow only for true bidirectional / symmetric association | `line_arrow` on target end; no-arrow only when explicitly bidirectional | source class → target class |
 | Dependency | dashed | open arrow | `line_arrow` on supplier end | dependent → supplier |
 | Composition | solid | filled diamond on the whole side | `diamond_arrow` on whole end | part → whole |
 | Aggregation | solid | hollow diamond on the whole side | `empty_diamond_arrow` on whole end | part → whole |
@@ -144,8 +148,9 @@ Treat these six rows as a validation table. A class relationship connector that 
 
 ### Multiplicity
 
-- Label both ends of associations, aggregations, and compositions when the count is meaningful.
-- Use a consistent notation such as `1`, `N`, `M`, `0..1`, `1..*`, `0..*`. For generic many-to-many relationships, `N:M` is acceptable and matches the Feishu relationship-standard board.
+- Label both ends of associations, aggregations, and compositions when the count is meaningful. In course-paper / teacher-reference diagrams, do this for every visible relationship unless the count is genuinely unknowable.
+- Use `1`, `0..1`, `1..*`, and `0..*` as the default notation. Prefer `0..*` over `N` / `M` when matching the accepted reference image; use `N`, `M`, or `N:M` only when the existing template or user explicitly asks for that notation.
+- Place multiplicity text close to each line endpoint, just outside the class box edge. Do not put endpoint multiplicity in the middle of the line, and do not let labels overlap borders, arrowheads, or other labels.
 
 ### Management / control relationships
 
@@ -165,12 +170,13 @@ Within a tier, group related classes near each other; route connectors to minimi
 
 When the board is empty and the agent is drawing from scratch (no template to clone), reproduce the traditional academic / software-engineering UML look. Concretely:
 
-- **Class box** — rectangle with a thin black border, divided by horizontal lines into three regions stacked top-to-bottom: name / attributes / methods.
+- **Class box** — rectangle with a thin black border, divided by horizontal lines into two or three regions stacked top-to-bottom: name / attributes / optional methods.
 - **Name region** — light grey fill, class name centered, bold or regular weight per the template; the attribute and method regions are white.
-- **Member rows** — left-aligned, one per line. Attribute rows use `- name: Type`, method rows use `+ method(): ReturnType`, matching the Feishu standard model (`- pos: Point`, `+ draw(): void`).
+- **Member rows** — left-aligned, one per line. Attribute rows use the teacher-reference form `-name: Type` by default (`-id: Long`, `-addtime: Timestamp`), while existing templates that already use `- name: Type` keep their spacing. Method rows, when present, use the same spacing rule (`+method(): ReturnType` or template-preserved `+ method(): ReturnType`).
 - **No card chrome** — no drop shadows, no rounded corners, no full-color body fills, no gradient backgrounds, no glyph icons. The reference is StarUML / Visio / ProcessOn UML exports, not a marketing slide.
 - **Connectors** — black thin lines. **Solid** for inheritance, association, aggregation, composition. **Dashed** for realization, dependency, and `manage`-style control arrows.
-- **Endpoint labels** — multiplicity numbers (`1`, `N`, `M`, `0..1`, `1..*`) sit at each line endpoint, close to the class box.
+- **Association arrows** — ordinary associations use visible arrowheads. In native raw this means `line_arrow` on the target end and no arrow style on the source end. Do not leave a normal association as a bare line just because the multiplicity text is present.
+- **Endpoint labels** — multiplicity numbers (`1`, `0..1`, `1..*`, `0..*`) sit at each line endpoint, close to the class box, matching the accepted reference image's `1` / `0..*` placement.
 - **Mid-line labels** — relationship verbs (`manage`, `审核`, `分配`) sit on the middle of the dashed control line.
 - **Layout flow** — top tier (management classes) at the top of the canvas, junction / record classes at the bottom; control arrows go top-down, association lines go vertically between the middle and bottom tiers.
 
@@ -178,8 +184,8 @@ When the board already has a template, follow the template's existing class-box 
 
 ### Naming style
 
-- Class names: business nouns in PascalCase (`User`, `Admin`, `Course`, `Exam`, `Question`, `Message`, `Submission`).
-- Attribute names: lowerCamelCase business fields (`userId`, `title`, `status`, `createTime`).
+- Class names: business nouns. For greenfield OOAD diagrams, use PascalCase (`User`, `Admin`, `Course`, `Exam`, `Question`, `Message`, `Submission`). For a reference-driven school diagram, preserve the source / template's class names exactly, even when they are lowercase pinyin or generated entity names (`yonghu`, `shangjia`, `huanchejilu`).
+- Attribute names: lowerCamelCase business fields (`userId`, `title`, `status`, `createTime`) for greenfield diagrams; preserve source / template names in reference-driven school diagrams (`addtime`, `shangjiazhanghao`, `haicheshijian`).
 - Method names: lowerCamelCase business verbs (`login()`, `publish()`, `submit()`, `edit()`, `delete()`).
 - Do not embed language keywords (`class`, `struct`, `interface { ... }`, `def`, `func`) into the visible text. Stereotypes such as `«interface»` or `«abstract»` are allowed on the name row when they carry design meaning.
 
@@ -194,16 +200,16 @@ When the board already has a template, follow the template's existing class-box 
 
 ## Native node composition
 
-Pick every native `type` from the matrix in [`../../references/native-types.md`](../../references/native-types.md) (see the class row). Every class / interface / abstract box must be a single `table_uml` node (header row + attribute rows + method rows inside `table.cells`), **never** three stacked `composite_shape` rectangles. Relationships are `connector` nodes, with arrow-head style (hollow / filled triangle / diamond / open) carrying the relationship semantics.
+Pick every native `type` from the matrix in [`../../references/native-types.md`](../../references/native-types.md) (see the class row). Every class / interface / abstract box must be a single `table_uml` node (header row + attribute rows + optional method rows inside `table.cells`), **never** three stacked `composite_shape` rectangles. Relationships are `connector` nodes, with arrow-head style (hollow / filled triangle / diamond / open) carrying the relationship semantics.
 
 Build the class diagram out of these native whiteboard primitives. Do not express any part of the diagram as PlantUML, Mermaid, or SVG.
 
-- **Class box** — native rectangle, divided into three stacked regions (class name on top, attributes in the middle, methods at the bottom). The board's existing class boxes already use a specific structure; clone one and overwrite its text rather than building a new shape.
+- **Class box** — native rectangle, divided into two or three stacked regions (class name on top, attributes below, optional methods at the bottom). The board's existing class boxes already use a specific structure; clone one and overwrite its text rather than building a new shape.
 - **Interface / abstract class box** — same native rectangle layout, with a `«interface»` or `«abstract»` stereotype on the name row (or whatever marker the template already uses).
 - **Visibility markers** — keep `+` / `-` / `#` / `~` in front of each member.
 - **Inheritance connector** — native `type: "connector"`, solid line, `empty_triangle_arrow` on the parent end, from child class id to parent class id.
 - **Realization connector** — native connector, dashed line, `empty_triangle_arrow` on the interface end, from implementer id to interface id.
-- **Association connector** — native connector, solid line, no arrow for bidirectional / plain association; `line_arrow` on the target end for one-way association. Role / multiplicity labels may sit on both ends.
+- **Association connector** — native connector, solid line, `line_arrow` on the target end by default and no arrow style on the source end. Use no-arrow ends on both sides only for explicitly bidirectional / symmetric associations or when preserving an existing template's deliberate bare association style. Role / multiplicity labels sit near both ends.
 - **Dependency connector** — native connector, dashed line, `line_arrow` on the supplier end. Use this for `manage` / `审核` / `分配` style control relationships and for transient usage dependencies.
 - **Composition connector** — native connector, solid line, `diamond_arrow` on the whole-class end.
 - **Aggregation connector** — native connector, solid line, `empty_diamond_arrow` on the whole-class end.
@@ -217,12 +223,13 @@ For every relationship connector, `connector.from` and `connector.to` must be id
 All checks MUST pass before `whiteboard +update --input_format raw`:
 
 - Every class-like object is `type: "table_uml"` and has `table.cells`; no class is represented by child rectangles, free text, SVG, Mermaid, PlantUML, or an image.
-- Class names are singular business nouns; request / response wrappers, DTO / VO / DO duplicates, mappers, repositories, and ORM artifacts are collapsed or omitted unless they are real design concepts.
-- Attribute rows match `^- [A-Za-z][A-Za-z0-9_]*: [A-Za-z][A-Za-z0-9_]*(.*)?$` in spirit; no DB column types, annotations, tags, or source-code syntax.
-- Method rows match `^\+ [a-z][A-Za-z0-9_]*\(.*\): [A-Za-z][A-Za-z0-9_]*$` in spirit; no accessors, trivial helpers, or source-language signatures.
+- Class names are business nouns; greenfield OOAD diagrams use singular PascalCase, while reference-driven school diagrams preserve the source / template names exactly. Request / response wrappers, DTO / VO / DO duplicates, mappers, repositories, and ORM artifacts are collapsed or omitted unless they are real design concepts.
+- Attribute rows match `^- ?[A-Za-z][A-Za-z0-9_]*: [A-Za-z][A-Za-z0-9_]*(.*)?$` in spirit; no `PK` / `FK` / `NN` markers, SQL DDL types, annotations, tags, or source-code syntax.
+- Method rows, when present, match `^\+ ?[a-z][A-Za-z0-9_]*\(.*\): [A-Za-z][A-Za-z0-9_]*$` in spirit; no accessors, trivial helpers, or source-language signatures.
 - Relationship connectors bind to final class / interface node ids and use the exact class arrow styles listed above.
 - No class relationship connector uses `zero_or_single_arrow`, `zero_or_multi_arrow`, coordinate-only endpoints, decorative lines, SVG strokes, Mermaid strokes, or PlantUML strokes.
-- Plain association, aggregation, and composition labels use one notation consistently (`1`, `N`, `M`, `N:M`, `0..1`, `1..*`, `0..*`).
-- The preview image still reads as an academic UML class diagram: black thin lines, rectangular class boxes, no colorful cards, no gradients, no decorative icons.
+- Ordinary association connectors in teacher-reference style have a visible `line_arrow` at the target end; a bare no-arrow association has a documented bidirectional / symmetric reason.
+- Plain association, aggregation, and composition labels use one notation consistently (`1`, `0..1`, `1..*`, `0..*` by default; `N`, `M`, `N:M` only when requested or template-established).
+- The preview image still reads as an academic UML class diagram: black thin lines, rectangular class boxes, visible relationship arrows, endpoint multiplicity labels, no colorful cards, no gradients, no decorative icons.
 
 If any check fails after writing, immediately re-query raw, fix the invalid node / connector, and overwrite the board again. Do not report success while a failed check remains.
