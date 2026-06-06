@@ -1,7 +1,7 @@
 {
   "name": "lark-uml",
   "version": "0.1.0",
-  "description": "Feishu/Lark native whiteboard UML and Slides skills, all driven by lark-cli.",
+  "description": "Feishu/Lark native whiteboard UML and Slides skills driven by lark-cli, including schema-checked native ER diagrams.",
   "author": {
     "name": "iwen-conf",
     "url": "https://github.com/iwen-conf"

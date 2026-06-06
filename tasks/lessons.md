@@ -46,6 +46,15 @@ callout ✅ + summary table (序号/业务/角色/图示组成)
 - Use `partition "用户端" { ... }` for activity diagrams that span roles (e.g., chat flow).
 - Same layer names as sequence diagrams for consistency.
 
+## ER diagram conventions (battle-tested)
+
+- ER diagrams are the exception to the PlantUML-first rule: use raw native `table_uml` and `connector` so schema rows, FK markers, connector captions, and layout can be verified.
+- Build the table / field inventory from the real schema source first, including later migrations. Before and after writing, verify: missing tables = 0, extra tables = 0, field diffs = 0.
+- Relationship connectors are straight by default (`shape: "straight"`, `turning_points: []`). Only use polylines when explicitly allowed or when straight lines make the diagram unreadable.
+- One table can have many lines to different tables, but one unordered table pair gets at most one visible connector. Multiple FKs between the same two tables stay visible as FK field markers, not as duplicate lines.
+- Cardinality is native `arrow_style`; if visible `0..* - 1` text is needed, put it in `connector.captions.data`, never as detached text nodes.
+- Lay out before writing: keep hub tables central, parent-child chains adjacent, related tables clustered, and avoid line bundles crossing the core of the diagram.
+
 ## Things that silently fail
 
 - Multiple `@startuml` blocks in one input → parser error.

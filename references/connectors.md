@@ -62,10 +62,12 @@ For `lark-uml:er`, cardinality is expressed through the native `arrow_style` on 
 | `1` (one) | `"zero_or_single_arrow"` |
 | `*` (many) | `"zero_or_multi_arrow"` |
 
-- `connector.shape` must be `"straight"` for direct FK relationships; use `"polyline"` only when routing around other entities is unavoidable.
+- `connector.shape` must be `"straight"` for direct FK relationships; use `"polyline"` only when routing around other entities is unavoidable or explicitly requested.
 - `turning_points` must be `[]` for straight connectors.
-- Every FK relationship gets one connector. The FK (child) row id is `connector.from`; the PK (parent) row id is `connector.to`.
+- Each unordered pair of tables gets at most one visible connector. If multiple FK fields connect the same two tables, keep all FK markers in the field rows but merge the visual relationship into one connector between that table pair.
+- The FK (child) side is `connector.from`; the PK (parent) side is `connector.to`. When multiple FK rows are merged into one table-pair connector, bind to a representative FK row and rely on the table rows to show all FK fields.
 - Many-to-many is materialized as a junction `table_uml` with two FK connectors — never a single connector with `*` on both ends.
+- If visible cardinality text is requested, store it as a connector caption (`connector.captions.data`) on the relationship connector. Do not use separate text nodes as line labels.
 
 ## Per-skill arrow_style enforcement
 

@@ -9,7 +9,7 @@ All `lark-uml:*` skills follow this loop. Diagram-specific quality rules live in
 | **PlantUML** | First-time creation, clean rebuild, most edits | `whiteboard +update --input_format plantuml --overwrite` |
 | **Raw native** | Precise in-place tweak on existing native board, combined-fragment surgery | `whiteboard +query --output_as raw` → edit → `+update --input_format raw` |
 
-**Default to PlantUML.** It is fast, predictable, and lets you focus on diagram content instead of node geometry.
+**Default to PlantUML** except when a diagram skill explicitly overrides the route. `lark-uml:er` is a raw-first exception because physical table rows, FK markers, connector captions, one-line-per-table-pair merging, and schema verification require direct native `table_uml` / `connector` control.
 
 > **⚠️ Do NOT** use `@larksuite/whiteboard-cli` or run `npx whiteboard-cli`. Do NOT create local `./diagrams/` directories or generate local files like `diagram.json`, `diagram.png`, or `diagram.svg`. Pipe directly to `lark-cli`.
 
@@ -34,6 +34,7 @@ All `lark-uml:*` skills follow this loop. Diagram-specific quality rules live in
 Inspect the target project source and identify:
 - For **sequence diagrams**: Browser entry action, Page/View component, Controller method + params, Service method + params, Mapper/Dao method, SQL/ORM operations, return types, branch conditions.
 - For **flowcharts**: Business steps, decision points, branch outcomes, error paths.
+- For **ER diagrams**: final physical tables and columns from migrations / DDL / schema files, including later `ALTER TABLE` migrations; PK / FK / NN / UQ markers; table-pair relationships after merging repeated same-table-pair FKs.
 
 Use real identifiers from code. Do not invent class names, method names, or table names.
 
@@ -94,6 +95,7 @@ lark-cli whiteboard +query <board_token> --output_as raw --as user
 - Business connectors must have string `connector.from` / `connector.to` bound to existing node ids.
 - Coordinate-only endpoints only for annotations/decorations.
 - Apply diagram-specific quality rules from the skill's `SKILL.md`.
+- ER-specific: table / field diff against the real schema must be zero; every relationship connector is straight unless explicitly allowed otherwise; duplicate table-pair connectors must be zero.
 - Scan for `elseif` / `else if` — rewrite as native decision diamonds.
 - Sequence-specific: walk the validation checklist in `skills/sequence/SKILL.md` for every `combined_fragment`.
 
